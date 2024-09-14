@@ -19,8 +19,8 @@ model Account {
   email       String    @unique @map("email")
   password    String    @map("password")
   name        String    @map("name")
-  createdAt   DataTime  @default(now()) @map("createdAt")
-  updatedAt   DataTime  @updatedAt @map("updatedAt")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   user User?
   team Team[]
@@ -35,10 +35,10 @@ model User {
   accountId   Int       @unique @map("accountId")
   userName    String    @map("userName")
   cash        Int       @map("cash")
-  guarantee   Int       @map("guarantee")
-  userScore   Int       @map("userScore")
-  createdAt   DataTime  @default(now()) @map("createdAt")
-  updatedAt   DataTime  @updatedAt @map("updatedAt")
+  guarantee   Int       @default(0) @map("guarantee")
+  userScore   Int       @default(0) @map("userScore")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
   score Score[]
@@ -51,11 +51,11 @@ model User {
 model Score {
   scoreId     Int       @id @default(autoincrement()) @map("scoreId")
   userId      Int       @unique @map("userId")
-  win         Int       @map("win")
-  lose        Int       @map("lose")
-  draw        Int       @map("draw")
-  createdAt   DataTime  @default(now()) @map("createdAt")
-  updatedAt   DataTime  @updatedAt @map("updatedAt")
+  win         Int       @default(0) @map("win")
+  lose        Int       @default(0) @map("lose")
+  draw        Int       @default(0) @map("draw")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
   @@map("Score")
@@ -64,13 +64,13 @@ model Score {
 
 // 팀 테이블
 model Team {
-  teamId      Int @id @default(autoincrement()) @map("teamId")
-  accountId   Int @unique @map("accountId")
-  playerId    Int @map("playerId")
-  upgrade     Int @map("upgrade")
-  isTeam      Boolean @map("isTeam")
-  createdAt   DataTime @default(now()) @map("createdAt")
-  updatedAt   DataTime @updatedAt @map("updatedAt")
+  teamId      Int       @id @default(autoincrement()) @map("teamId")
+  accountId   Int       @unique @map("accountId")
+  playerId    Int       @map("playerId")
+  upgrade     Int       @default(0) @map("upgrade")
+  isTeam      Boolean   @default(false) @map("isTeam")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
   player Player[]
@@ -81,18 +81,19 @@ model Team {
 
 // 카드 테이블
 model Player {
-  playerId Int @id @default(autoincrement()) @map("playerId")
-  playerName String @map("playerName")
-  rare Int @map("rare")
-  speed Int @map("speed")
-  finishing Int @map("finishing")
-  pass Int @map("pass")
-  defense Int @map("defense")
-  stamina Int @map("stamina")
-  createdAt DataTime @default(now()) @map("createdAt")
-  updatedAt DataTime @updatedAt @map("updatedAt")
+  playerId    Int       @id @default(autoincrement()) @map("playerId")
+  playerName  String    @map("playerName")
+  rare        Int       @map("rare")
+  speed       Int       @map("speed")
+  finishing   Int       @map("finishing")
+  pass        Int       @map("pass")
+  defense     Int       @map("defense")
+  stamina     Int       @map("stamina")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
   
   team Team[]
 
   @@map("Player")
+
 }
