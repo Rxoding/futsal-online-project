@@ -16,7 +16,7 @@ datasource db {
 // 계정 테이블
 model Account {
   accountId   Int       @id @default(autoincrement()) @map("accountId)
-  email       String    @map("email")
+  email       String    @unique @map("email")
   password    String    @map("password")
   name        String    @map("name")
   createdAt   DataTime  @default(now()) @map("createdAt")
