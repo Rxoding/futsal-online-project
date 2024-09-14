@@ -50,7 +50,7 @@ model User {
 // 점수 테이블
 model Score {
   scoreId     Int       @id @default(autoincrement()) @map("scoreId")
-  userId      Int       @unique @map("userId")
+  userId      Int       @map("userId")
   win         Int       @default(0) @map("win")
   lose        Int       @default(0) @map("lose")
   draw        Int       @default(0) @map("draw")
@@ -65,7 +65,7 @@ model Score {
 // 팀 테이블
 model Team {
   teamId      Int       @id @default(autoincrement()) @map("teamId")
-  accountId   Int       @unique @map("accountId")
+  accountId   Int       @map("accountId")
   playerId    Int       @map("playerId")
   upgrade     Int       @default(0) @map("upgrade")
   isTeam      Boolean   @default(false) @map("isTeam")
