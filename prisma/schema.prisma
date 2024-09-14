@@ -22,7 +22,7 @@ model Account {
   createdAt   DataTime  @default(now()) @map("createdAt")
   updatedAt   DataTime  @updatedAt @map("updatedAt")
 
-  user User[]
+  user User?
   team Team[]
 
   @@map("Account")
@@ -32,7 +32,7 @@ model Account {
 // 사용자 테이블
 model User {
   userId      Int       @id @default(autoincrement()) @map("userId")
-  accountId   Int       @map("accountId")
+  accountId   Int       @unique @map("accountId")
   userName    String    @map("userName")
   cash        Int       @map("cash")
   guarantee   Int       @map("guarantee")
@@ -50,7 +50,7 @@ model User {
 // 점수 테이블
 model Score {
   scoreId     Int       @id @default(autoincrement()) @map("scoreId")
-  userId      Int       @map("userId")
+  userId      Int       @unique @map("userId")
   win         Int       @map("win")
   lose        Int       @map("lose")
   draw        Int       @map("draw")
@@ -63,9 +63,9 @@ model Score {
 }
 
 // 팀 테이블
-model team {
+model Team {
   teamId      Int @id @default(autoincrement()) @map("teamId")
-  accountId   Int @map("accountId")
+  accountId   Int @unique @map("accountId")
   playerId    Int @map("playerId")
   upgrade     Int @map("upgrade")
   isTeam      Boolean @map("isTeam")
