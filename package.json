@@ -5,6 +5,7 @@
   "repository": "https://github.com/Rxoding/Futsal-Online-project.git",
   "author": "SSW1113 <ysshin1016@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "dependencies": {
     "@prisma/client": "^5.19.1",
     "cookie-parser": "^1.4.6",
