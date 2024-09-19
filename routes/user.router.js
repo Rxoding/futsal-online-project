@@ -101,27 +101,38 @@ router.post('/sign-in', async (req, res, next) => {
 });
 
 
-// -- 유저 정보 조회 API -- //
+// -- 내 정보 조회 API -- //
 router.get('/user', authMiddleware, async (req, res, next) => {
-    const { name } = req.user;
+    const { accountId } = req.account;
 
-    const user = await prisma.user.findFirst({
-        where: { name: +name },
+    const account = await prisma.account.findFirst({
+        where: { accountId: +accountId },
         select: {
-            name: true,
-            userScore: true,
-            
-            score: {
+            accountId: true,
+
+            user: {
                 select: {
-                    win: true,
-                    lose: true,
-                    draw: true,
-                },
+                    name: true,
+                    cash: true,
+                    guarantee: true,
+                    userScore: true,
+
+                    score: {
+                        select: {
+                            win: true,
+                            lose: true,
+                            draw: true,
+                            createdAt: true,
+                            updatedAt: true,
+                        }
+                    },
+                }
+
             },
         },
     });
 
-    return res.status(200).json({ data: user });
+    return res.status(200).json({ data: account });
 });
 
 export default router;
