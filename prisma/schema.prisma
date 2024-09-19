@@ -17,13 +17,12 @@ datasource db {
 model Account {
   accountId   Int       @id @default(autoincrement()) @map("accountId)
   email       String    @unique @map("email")
-  password    String    @map("password")
-  name        String    @map("name")
+  password    String    @db.VarChar(7) @map("password")   // 길이 7자 제한
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   user User?
-  team Team[]
+  teamPlayer TeamPlayer[]
 
   @@map("Account")
 
@@ -33,7 +32,7 @@ model Account {
 model User {
   userId      Int       @id @default(autoincrement()) @map("userId")
   accountId   Int       @unique @map("accountId")
-  userName    String    @map("userName")
+  name        String    @map("name")
   cash        Int       @map("cash")
   guarantee   Int       @default(0) @map("guarantee")
   userScore   Int       @default(0) @map("userScore")
@@ -58,12 +57,13 @@ model Score {
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  teamPlayer TeamPlayer[]
   @@map("Score")
 
 }
 
 // 팀 테이블
-model Team {
+model TeamPlayer {
   teamId      Int       @id @default(autoincrement()) @map("teamId")
   accountId   Int       @map("accountId")
   playerId    Int       @map("playerId")
@@ -73,9 +73,9 @@ model Team {
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
-  player Player[]
+  player Player @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
 
-  @@map("Team")
+  @@map("TeamPlayer")
 
 }
 
@@ -92,7 +92,7 @@ model Player {
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
   
-  team Team[]
+  teamPlayer TeamPlayer[]
 
   @@map("Player")
 
