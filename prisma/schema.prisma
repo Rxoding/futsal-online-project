@@ -17,7 +17,7 @@ datasource db {
 model Account {
   accountId   Int       @id @default(autoincrement()) @map("accountId")
   email       String    @unique @map("email")
-  password    String    @db.VarChar(7) @map("password")   // 길이 7자 제한
+  password    String    @map("password")
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
