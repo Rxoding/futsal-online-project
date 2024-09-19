@@ -22,6 +22,19 @@ function generateRandomName() {
 // -- 회원가입 API -- //
 router.post('/sign-up', async (req, res, next) => {
     const { email, password } = req.body;
+
+    // 이메일 유효성 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: '유효하지 않은 이메일 형식입니다.' });
+    }
+
+    // 비밀번호 길이 제한
+    if (password.length > 7) {
+        return res.status(400).json({ message: '비밀번호는 7자 까지만 입력 가능합니다.' });
+    }
+
+    // 이메일 검사
     const isExistAccount = await prisma.account.findFirst({
         where: {
             email,
