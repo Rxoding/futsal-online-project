@@ -92,7 +92,7 @@ model Player {
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
   
-  teamPlayer TeamPlayer?
+  teamPlayer TeamPlayer[]
 
   @@map("Player")
 
