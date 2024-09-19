@@ -64,7 +64,7 @@ model Score {
 // 팀 테이블
 model TeamPlayer {
   teamId      Int       @id @default(autoincrement()) @map("teamId")
-  userId      Int       @unique @map("userId")
+  userId      Int       @map("userId")
   playerId    Int       @unique @map("playerId")
   upgrade     Int       @default(0) @map("upgrade")
   isTeam      Boolean   @default(false) @map("isTeam")
