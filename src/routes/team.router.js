@@ -9,17 +9,25 @@ router.post('/test', authMiddleware, async (req, res, next) => {
     try {
         const { playerId } = req.body;
         const { userId } = req.user;
-        const isExistplayercode = await prisma.teamPlayer.findFirst({
+        const isExistplayercode = await prisma.userPlayer.findFirst({
             where: {
                 userId: userId,
                 playerId,
             },
         });
         if (isExistplayercode) {
-            return res.status(409).json({ message: '이미 존재하는 선수 코드입니다.' });
+            const count = await prisma.userPlayer.update({
+                where: {
+                    Id: isExistplayercode.Id,
+                    playerId,
+                },
+                data: {
+                    count: isExistplayercode.count + 1,
+                },
+            });
         }
         // TeamPlayer 테이블에 아이템을 추가합니다.
-        const player = await prisma.teamPlayer.create({
+        const player = await prisma.userPlayer.create({
             data: {
                 userId: +userId,
                 playerId: playerId,
@@ -36,15 +44,15 @@ router.post('/test', authMiddleware, async (req, res, next) => {
 });
 
 /** 보유 선수 조회 API **/
-router.get('/teamplayer', authMiddleware, async (req, res, next) => {
+router.get('/userPlayer', authMiddleware, async (req, res, next) => {
     const { userId } = req.user;
 
-    const teamplayer = await prisma.teamPlayer.findMany({
+    const userPlayer = await prisma.userPlayer.findMany({
         where: { userId: +userId },
         select: {
             playerId: true,
             upgrade: true,
-            isTeam: true,
+            teamId: true,
             player: {
                 // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
                 // todo upgrade에 따른 스탯 상승 보여줘야함
@@ -61,19 +69,19 @@ router.get('/teamplayer', authMiddleware, async (req, res, next) => {
         },
     });
 
-    return res.status(200).json({ data: teamplayer });
+    return res.status(200).json({ data: userPlayer });
 });
 /** 보유 선수 상세조회 API **/
-router.get('/teamplayer/:playerId', async (req, res, next) => {
+router.get('/userPlayer/:playerId', async (req, res, next) => {
     const { playerId } = req.params;
-    const playerid = await prisma.teamPlayer.findFirst({
+    const playerid = await prisma.userPlayer.findFirst({
         where: {
             playerId: +playerId,
         },
         select: {
             playerId: true,
             upgrade: true,
-            isTeam: true,
+            teamId: true,
             player: {
                 // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
                 // todo upgrade에 따른 스탯 상승 보여줘야함
@@ -95,11 +103,11 @@ router.get('/teamplayer/:playerId', async (req, res, next) => {
 /** 로스터 조회 API **/
 // todo 3명인지 체크
 // todo 중복된 playerId 체크    
-router.get('/teamplayer/roster', authMiddleware, async (req, res, next) => {
+router.get('/userPlayer/roster', authMiddleware, async (req, res, next) => {
     const { userId } = req.user;
 
-    const roster = await prisma.teamPlayer.findMany({
-        where: { userId: +userId, isTeam: true },
+    const roster = await prisma.userPlayer.findMany({
+        where: { userId: +userId, teamId: 1 },
         select: {
             playerId: true,
             upgrade: true,
@@ -125,10 +133,10 @@ router.get('/teamplayer/roster', authMiddleware, async (req, res, next) => {
 /** 로스터 변경 API **/
 // todo 3명인지 체크
 // todo 중복된 playerId 체크
-router.put('/teamplayer/roster', authMiddleware, async (req, res, next) => {
+router.put('/userPlayer/roster', authMiddleware, async (req, res, next) => {
     const { userId } = req.user;
 
-    const user = await prisma.teamPlayer.findMany({
+    const user = await prisma.userPlayer.findMany({
         where: { userId: +userId, isTeam: true },
         select: {
             playerId: true,
