@@ -102,10 +102,10 @@ router.post('/sign-in', async (req, res, next) => {
 
 // -- 유저 정보 조회 API -- //
 router.get('/user', authMiddleware, async (req, res, next) => {
-  const { name } = req.user;
+  const { userId } = req.user;
 
   const user = await prisma.user.findFirst({
-    where: { name: +name },
+    where: { userId: +userId },
     select: {
       name: true,
       userScore: true,
