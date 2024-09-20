@@ -108,6 +108,7 @@ router.get('/user', authMiddleware, async (req, res, next) => {
     select: {
       name: true,
       userScore: true,
+      cash: true,
 
       score: {
         select: {
