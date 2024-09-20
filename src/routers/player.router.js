@@ -47,4 +47,16 @@ router.get('/player/:playerId', async (req, res, next) => {
   }
 });
 
+// 게임 시작 API
+router.post("/games/play", async (req, res, next) => {
+  const { teamAIds, teamBIds, teamAName, teamBName } = req.body;
+
+  try {
+    const result = await startGame(teamAIds, teamBIds, teamAName, teamBName);
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
