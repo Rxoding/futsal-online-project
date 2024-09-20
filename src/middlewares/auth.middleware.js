@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
 
+const jwtSecretKey = process.env.SESSION_SECRET_KEY;
+
 export default async function (req, res, next) {
   try {
     const { authorization } = req.cookies;
@@ -11,7 +13,7 @@ export default async function (req, res, next) {
     if (tokenType !== 'Bearer')
       throw new Error('토큰 타입이 일치하지 않습니다.');
 
-    const decodedToken = jwt.verify(token, 'custom-secret-key'); //검증
+    const decodedToken = jwt.verify(token, jwtSecretKey); //검증
     const userId = decodedToken.userId;
 
     const user = await prisma.user.findFirst({
