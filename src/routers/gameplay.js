@@ -18,8 +18,38 @@ export function calculateScore(player) {
   );
 }
 
+// 승리 및 패배 카운트 업데이트 함수
+async function updateTeamStats(winningTeamId, losingTeamId) {
+  // 승리한 팀의 win 카운트 증가
+  await prisma.team.update({
+    where: { id: winningTeamId },
+    data: {
+      win: {
+        increment: 1,
+      },
+    },
+  });
+
+  // 패배한 팀의 lose 카운트 증가
+  await prisma.team.update({
+    where: { id: losingTeamId },
+    data: {
+      lose: {
+        increment: 1,
+      },
+    },
+  });
+}
+
 // 랜덤 선수 선택 및 승패 결정
-export async function startGame(teamAIds, teamBIds, teamAName, teamBName) {
+export async function startGame(
+  teamAIds,
+  teamBIds,
+  teamAName,
+  teamBName,
+  teamAId,
+  teamBId
+) {
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },
   });
@@ -29,8 +59,10 @@ export async function startGame(teamAIds, teamBIds, teamAName, teamBName) {
 
   let scoreA = 0;
   let scoreB = 0;
+  let draws = 0;
   const gameLog = [];
 
+  // 경기가 끝날 때까지 계속 진행
   while (scoreA < 3 && scoreB < 3) {
     const randomPlayerA = playersA[Math.floor(Math.random() * playersA.length)];
     const randomPlayerB = playersB[Math.floor(Math.random() * playersB.length)];
@@ -38,41 +70,55 @@ export async function startGame(teamAIds, teamBIds, teamAName, teamBName) {
     const playerScoreA = calculateScore(randomPlayerA);
     const playerScoreB = calculateScore(randomPlayerB);
 
+    const gameTime = `${Math.floor(Math.random() * 90) + 1}분`;
+
     // 선수 점수 비교
     if (playerScoreA > playerScoreB) {
       scoreA++;
       gameLog.push({
-        gameTime: `${Math.floor(Math.random() * 90) + 1}분`,
+        gameTime,
         goalTeam: teamAName,
         goalPlayer: randomPlayerA.playerName,
       });
     } else if (playerScoreB > playerScoreA) {
       scoreB++;
       gameLog.push({
-        gameTime: `${Math.floor(Math.random() * 90) + 1}분`,
+        gameTime,
         goalTeam: teamBName,
         goalPlayer: randomPlayerB.playerName,
       });
     } else {
-      // 스탯이 같을 경우 재경기
-      continue; // 재경기 진행
+      draws++;
+      gameLog.push({
+        gameTime,
+        goalTeam: "무승부",
+        goalPlayer: "양 팀 선수 모두가 막상막하네요.",
+      });
     }
   }
 
+  // 최종 승리 팀 결정
   const winner = scoreA === 3 ? teamAName : scoreB === 3 ? teamBName : null;
 
+  // 게임 결과 반환 및 승패 카운트 업데이트
   if (winner) {
+    if (scoreA === 3) {
+      // A팀 승리, B팀 패배
+      await updateTeamStats(teamAId, teamBId);
+    } else {
+      // B팀 승리, A팀 패배
+      await updateTeamStats(teamBId, teamAId);
+    }
+
     return {
       message: `${winner} 팀이 승리했습니다. 축하드립니다!`,
-      result: `${teamAName} ${scoreA} : ${scoreB} ${teamBName}`,
+      result: `${teamAName} ${scoreA} - ${scoreB} ${teamBName}`,
       gameLog,
     };
   } else {
-    // 패배 처리
-    const losingTeam = scoreA < scoreB ? teamAName : teamBName;
     return {
-      message: `${losingTeam} 팀이 패배했습니다. 좋은 선수로 구성해보세요!`,
-      result: `${teamAName} ${scoreA} : ${scoreB} ${teamBName}`,
+      message: `경기가 끝났습니다.`,
+      result: `${teamAName} ${scoreA} - ${scoreB} ${teamBName}`,
       gameLog,
     };
   }
