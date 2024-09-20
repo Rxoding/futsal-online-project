@@ -3,7 +3,7 @@ import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authMiddleware from '../middleWares/auth.middleWare.js';
-import jwtSecretKey from '../utils/jwtSecretkey.js';
+import jwtSecretKey from '../utils/jwtSecretKey.js';
 
 const router = express.Router();
 
