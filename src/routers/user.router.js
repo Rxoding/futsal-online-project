@@ -2,7 +2,7 @@ import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../middleWares/auth.middleWare.js';
 
 const router = express.Router();
 
@@ -30,23 +30,6 @@ function generateRandomName() {
 // -- 회원가입 API -- //
 router.post('/sign-up', async (req, res, next) => {
   const { email, password } = req.body;
-
-  // 이메일 유효성 검사
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res
-      .status(400)
-      .json({ message: '유효하지 않은 이메일 형식입니다.' });
-  }
-
-  // 비밀번호 길이 제한
-  if (password.length > 7) {
-    return res
-      .status(400)
-      .json({ message: '비밀번호는 7자 까지만 입력 가능합니다.' });
-  }
-
-  // 이메일 검사
   const isExistAccount = await prisma.account.findFirst({
     where: {
       email,
@@ -76,7 +59,7 @@ router.post('/sign-up', async (req, res, next) => {
     data: {
       accountId: account.accountId,
       name: randomName,
-      cash: 10000,
+      cash: 1000,
     },
   });
 
@@ -98,10 +81,13 @@ router.post('/sign-in', async (req, res, next) => {
     return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
   }
 
+  const user = await prisma.user.findFirst({
+    where: { accountId: account.accountId },
+  });
   // 로그인 성공 시 토큰 생성
   const token = jwt.sign(
     {
-      accountId: account.accountId,
+      userId: user.userId,
     },
     'custom-secret-key'
   );
@@ -111,47 +97,37 @@ router.post('/sign-in', async (req, res, next) => {
   return res.status(200).json({ message: '로그인 되었습니다 !' });
 });
 
-// -- 내 정보 조회 API -- //
+// -- 유저 정보 조회 API -- //
 router.get('/user', authMiddleware, async (req, res, next) => {
-  const { accountId } = req.account;
+  const { name } = req.user;
 
-  const account = await prisma.account.findFirst({
-    where: { accountId: +accountId },
+  const user = await prisma.user.findFirst({
+    where: { name: +name },
     select: {
-      accountId: true,
+      name: true,
+      userScore: true,
 
-      user: {
+      score: {
         select: {
-          name: true,
-          cash: true,
-          guarantee: true,
-          userScore: true,
-
-          score: {
-            select: {
-              win: true,
-              lose: true,
-              draw: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
+          win: true,
+          lose: true,
+          draw: true,
         },
       },
     },
   });
 
-  return res.status(200).json({ data: account });
+  return res.status(200).json({ data: user });
 });
 
 // 캐시충전 API
 router.put('/user/chargeCash', authMiddleware, async (req, res, next) => {
-  const { accountId } = req.account;
+  const { userId } = req.user;
   const { cash } = req.body;
 
   try {
     const chargeCash = await prisma.user.update({
-      where: { accountId: +accountId },
+      where: { userId: +userId },
       data: {
         cash: {
           increment: cash,

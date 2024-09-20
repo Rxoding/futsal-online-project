@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,7 +16,6 @@ model Account {
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   user User?
-  teamPlayer TeamPlayer[]
 
   @@map("Account")
 
@@ -40,7 +33,8 @@ model User {
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
   account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
-  score Score[]
+  userPlayer UserPlayer[]
+  score Score?
 
   @@map("User")
 
@@ -49,7 +43,7 @@ model User {
 // 점수 테이블
 model Score {
   scoreId     Int       @id @default(autoincrement()) @map("scoreId")
-  userId      Int       @map("userId")
+  userId      Int       @unique @map("userId")
   win         Int       @default(0) @map("win")
   lose        Int       @default(0) @map("lose")
   draw        Int       @default(0) @map("draw")
@@ -62,20 +56,20 @@ model Score {
 }
 
 // 팀 테이블
-model TeamPlayer {
-  teamId      Int       @id @default(autoincrement()) @map("teamId")
-  accountId   Int       @map("accountId")
+model UserPlayer {
+  Id      Int       @id @default(autoincrement()) @map("Id")
+  userId      Int       @map("userId")
   playerId    Int       @map("playerId")
   upgrade     Int       @default(0) @map("upgrade")
-  isTeam      Boolean   @default(false) @map("isTeam")
+  teamId      Int?       @map("teamId")
+  count       Int       @default(0) @map("count")
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
 
-  account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
   player Player @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
-
-  @@map("TeamPlayer")
-
+  
+  @@map("UserPlayer")
 }
 
 // 카드 테이블
@@ -91,7 +85,7 @@ model Player {
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
   
-  teamPlayer TeamPlayer[]
+  userPlayer UserPlayer[]
 
   @@map("Player")
 
