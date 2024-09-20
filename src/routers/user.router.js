@@ -3,11 +3,9 @@ import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authMiddleware from '../middleWares/auth.middleWare.js';
-import dotenv from 'dotenv';
+import jwtSecretKey from '../utils/jwtSecretkey.js';
 
-dotenv.config();
 const router = express.Router();
-const jwtSecretKey = process.env.SESSION_SECRET_KEY;
 
 // 랜덤 이름 생성 함수
 function generateRandomName() {
@@ -92,7 +90,8 @@ router.post('/sign-in', async (req, res, next) => {
     {
       userId: user.userId,
     },
-    jwtSecretKey
+    jwtSecretKey(),
+    console.log(process.env.SESSION_SECRET_KEY)
   );
 
   // authotization JWT 저장

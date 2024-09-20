@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
-
-const jwtSecretKey = process.env.SESSION_SECRET_KEY;
+import jwtSecretKey from '../utils/jwtSecretkey.js';
 
 export default async function (req, res, next) {
   try {
@@ -12,8 +11,8 @@ export default async function (req, res, next) {
 
     if (tokenType !== 'Bearer')
       throw new Error('토큰 타입이 일치하지 않습니다.');
-
-    const decodedToken = jwt.verify(token, jwtSecretKey); //검증
+    console.log(jwtSecretKey());
+    const decodedToken = jwt.verify(token, jwtSecretKey()); //검증
     const userId = decodedToken.userId;
 
     const user = await prisma.user.findFirst({
@@ -30,7 +29,7 @@ export default async function (req, res, next) {
     next();
   } catch (error) {
     res.clearCookie('authorization');
-
+    console.log(error.message);
     // 토큰이 만료, 조작 시, 에러 메시지 출력
     switch (error.name) {
       case 'TokenExpiredError':
