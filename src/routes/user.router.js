@@ -75,22 +75,22 @@ router.post('/sign-up', async (req, res, next) => {
 // -- 로그인 API -- //
 router.post('/sign-in', async (req, res, next) => {
     const { email, password } = req.body;
-    const account = await prisma.account.findFirst({ where: { email } });
+    const user = await prisma.user.findFirst({ where: { accountId: account.accountId } }); // 로그인 성공 시 토큰 생성 const token = jwt.sign( { userId: user.userId, },
 
     // 이메일 검사
-    if (!account) {
+    if (!user) {
         return res.status(401).json({ message: '존재하지 않는 이메일입니다.' });
     }
 
     // 비밀번호 검사
-    else if (!(await bcrypt.compare(password, account.password))) {
+    else if (!(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
     }
 
     // 로그인 성공 시 토큰 생성
     const token = jwt.sign(
         {
-            accountId: account.accountId,
+            userId: user.userId,
         },
         'custom-secret-key',
     );
@@ -101,34 +101,30 @@ router.post('/sign-in', async (req, res, next) => {
 });
 
 
+
+
 // -- 내 정보 조회 API -- //
 router.get('/user', authMiddleware, async (req, res, next) => {
-    const { accountId } = req.account;
+    const { userId } = req.user;
 
-    const account = await prisma.account.findFirst({
-        where: { accountId: +accountId },
+    const user = await prisma.user.findFirst({
+        where: { userId: +userId },
         select: {
-            accountId: true,
+            name: true,
+            cash: true,
+            guarantee: true,
+            userScore: true,
 
-            user: {
+            score: {
                 select: {
-                    name: true,
-                    cash: true,
-                    guarantee: true,
-                    userScore: true,
-
-                    score: {
-                        select: {
-                            win: true,
-                            lose: true,
-                            draw: true,
-                            createdAt: true,
-                            updatedAt: true,
-                        }
-                    },
+                    win: true,
+                    lose: true,
+                    draw: true,
+                    createdAt: true,
+                    updatedAt: true,
                 }
-
             },
+
         },
     });
 

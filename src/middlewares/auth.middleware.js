@@ -12,19 +12,19 @@ export default async function (req, res, next) {
       throw new Error('토큰 타입이 일치하지 않습니다.');
 
     const decodedToken = jwt.verify(token, 'custom-secret-key');  //검증
-    const accountId = decodedToken.accountId;
+    const userId = decodedToken.userId;
 
-    const account = await prisma.account.findFirst({
-      where: { accountId: +accountId }
+    const user = await prisma.user.findFirst({
+      where: { userId: +userId }
     });
     
-    if (!account) {
+    if (!user) {
       res.clearCookie('authorization');
       throw new Error('토큰 사용자가 존재하지 않습니다.');
     }
 
     // 사용자 정보 저장
-    req.account = account;
+    req.user = user;
 
     next();
   } catch (error) {
