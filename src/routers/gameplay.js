@@ -1,5 +1,3 @@
-// gameplay.js
-
 import { prisma } from "../utils/prisma/index.js";
 
 // 팀 점수 계산 함수
