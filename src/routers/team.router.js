@@ -19,23 +19,50 @@ router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
   const { userId } = req.params;
 
   try {
-    // 확률
-    const probability = Math.random(0, 1);
-    if (probability <= 0.02) {
-      const rare = 1; // 2% 확률로 1등급
-    } else if (probability <= 0.1) {
-      const rare = 2; // 8% 확률로 2등급
-    } else if (probability <= 0.3) {
-      const rare = 3; // 20% 확률로 3등급
-    } else if (probability <= 0.6) {
-      const rare = 4; // 30% 확률로 4등급
+    // 유저 정보 조회
+    const user = await prisma.user.findFirst({
+      where: { userId: +userId },
+    });
+
+    // 개런티가 80이면 1등급 확정
+    if (user.guarantee >= 80) {
+      const selectedPlayer = await getRandomPlayer(1);
+      await prisma.user.update({
+        where: { userId: +userId },
+        data: { guarantee: 0 },
+      });
     } else {
-      const rare = 5; // 40% 확률로 5등급
+      // 확률
+      const probability = Math.random(0, 1);
+      if (probability <= 0.02) {
+        const rare = 1; // 2% 확률로 1등급
+      } else if (probability <= 0.1) {
+        const rare = 2; // 8% 확률로 2등급
+      } else if (probability <= 0.3) {
+        const rare = 3; // 20% 확률로 3등급
+      } else if (probability <= 0.6) {
+        const rare = 4; // 30% 확률로 4등급
+      } else {
+        const rare = 5; // 40% 확률로 5등급
+      }
+
+      // 1등급을 뽑으면 개런티 초기화
+      if (rare === 1) {
+        await prisma.user.update({
+          where: { userId: +userId },
+          data: { guarantee: 0 },
+        });
+      } else {
+        // 아니면 개런티 +1
+        await prisma.user.update({
+          where: { userId: +userId },
+          data: { guarantee: user.guarantee + 1 },
+        });
+      }
+      const selectedPlayer = await getRandomPlayer(rare);
     }
 
     // 존재하지 않는 선수일 경우 에러 발생
-    const selectedPlayer = await getRandomPlayer(rare);
-
     if (!selectedPlayer) {
       return res.status(404).json({ error: '존재하지 않는 선수입니다.' });
     }
