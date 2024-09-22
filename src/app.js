@@ -4,6 +4,9 @@ import PlayerRouter from './routers/player.router.js';
 import LogMiddleware from './middlewares/log.middleware.js';
 import UserRouter from './routers/user.router.js';
 import ErrorHandlingMiddleware from './middlewares/error-handling.middleware.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = 3029;
