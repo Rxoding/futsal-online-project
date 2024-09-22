@@ -204,3 +204,5 @@ router.update('/upgrade/:userId/:playerId', authMiddleware, async (req, res, nex
     next(err);
   }
 });
+
+export default router;
