@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
 import jwtSecretKey from '../utils/jwtSecretKey.js';
 
+
 export default async function (req, res, next) {
   try {
     const { authorization } = req.cookies;
@@ -29,7 +30,6 @@ export default async function (req, res, next) {
     next();
   } catch (error) {
     res.clearCookie('authorization');
-    console.log(error.message);
     // 토큰이 만료, 조작 시, 에러 메시지 출력
     switch (error.name) {
       case 'TokenExpiredError':
@@ -43,3 +43,4 @@ export default async function (req, res, next) {
     }
   }
 }
+
