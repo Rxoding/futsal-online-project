@@ -98,7 +98,7 @@ function isUpgradeSuccessed(upgrade) {
 }
 
 // 선수 강화 API
-router.update('/upgrade/:userId/:playerId', async (req, res, next) => {
+router.update('/upgrade/:userId/:playerId', authMiddleware, async (req, res, next) => {
   const { userId, playerId } = req.params;
 
   try {
