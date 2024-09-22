@@ -5,7 +5,7 @@ import authMiddleware from '../middleWares/auth.middleWare.js';
 const router = express.Router();
 
 // 랭킹 조회 API
-router.get('/ranking', authMiddleware, async (res, req, next) => {
+router.get('/ranking', async (req, res, next) => {
   try {
     const ranking = await prisma.user.findMany({
       select: {
@@ -24,11 +24,11 @@ router.get('/ranking', authMiddleware, async (res, req, next) => {
         userScore: 'desc',
       },
     });
+
+    return res.status(200).json({ data: ranking });
   } catch (err) {
     next(err);
   }
-
-  return res.status(200).json({ data: ranking });
 });
 
 export default router;
