@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { startGame } from './gameplay.js'; // 게임 로직이 들어있는 서비스 파일
 import { prisma } from '../utils/prisma/index.js';
+import authMiddleware from '../middleWares/auth.middleWare.js';
 
 const router = Router();
 
-router.post('/playgame', async (req, res, next) => {
+router.post('/playgame', authMiddleware, async (req, res, next) => {
   try {
     const { teamA, teamB } = req.body;
     const { userId } = req.user;
@@ -32,7 +33,7 @@ router.post('/playgame', async (req, res, next) => {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: +userId },
+      where: { userId: +userId },
       select: { name: true },
     });
 
@@ -44,8 +45,8 @@ router.post('/playgame', async (req, res, next) => {
       teamBIds: rosterB.map((player) => player.playerId),
       teamAName, // 사용자 이름 기반의 팀 A 이름
       teamBName, // 사용자 이름 기반의 팀 B 이름
-      teamAId: 1, // 팀 A의 ID
-      teamBId: 2, // 팀 B의 ID
+      teamAId: teamA.teamId, // 팀 A의 ID
+      teamBId: teamB.teamId, // 팀 B의 ID
     });
     // 결과 반환
     res.status(200).json(result);
