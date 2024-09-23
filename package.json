@@ -13,12 +13,11 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
-    "jwt": "^0.2.0",
     "prisma": "^5.19.1",
     "winston": "^3.14.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.6"
   },
   "scripts": {
     "seed": "node prisma/seed.js"
