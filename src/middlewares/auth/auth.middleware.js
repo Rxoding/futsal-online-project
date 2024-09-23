@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { prisma } from '../utils/prisma/index.js';
-import jwtSecretKey from '../utils/jwtSecretKey.js';
-
+import { prisma } from '../../utils/prisma/index.js';
+import jwtSecretKey from '../../utils/jwtSecretKey.js';
 
 export default async function (req, res, next) {
   try {
@@ -43,4 +42,3 @@ export default async function (req, res, next) {
     }
   }
 }
-
