@@ -2,8 +2,14 @@ import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import authMiddleware from '../middleWares/auth.middleWare.js';
+import authMiddleware from '../middlewares/auth/auth.middleware.js';
 import jwtSecretKey from '../utils/jwtSecretKey.js';
+import { Prisma } from '@prisma/client';
+import {
+  signUpValidator,
+  signInValidator,
+  cashValidator,
+} from '../middlewares/validators/user.validator.middleware.js';
 
 const router = express.Router();
 
@@ -21,46 +27,60 @@ function generateRandomName() {
 }
 
 // -- 회원가입 API -- //
-router.post('/sign-up', async (req, res, next) => {
-  const { email, password } = req.body;
-  const isExistAccount = await prisma.account.findFirst({
-    where: {
-      email,
-    },
-  });
+router.post('/sign-up', signUpValidator, async (req, res, next) => {
+  try {
+    const { email, password, name } = req.body;
+    const isExistAccount = await prisma.account.findFirst({
+      where: {
+        email,
+      },
+    });
 
-  if (isExistAccount) {
-    return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+    if (isExistAccount) {
+      return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+    }
+
+    // password 암호화
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 이름이 제공되지 않으면 랜덤이름 사용
+    const useName = name || generateRandomName();
+
+    // 트랜잭션 사용
+    const [account, user] = await prisma.$transaction(
+      async (tx) => {
+        // account 생성
+        const account = await prisma.account.create({
+          data: {
+            email,
+            password: hashedPassword,
+          },
+        });
+        // user 생성
+        const user = await prisma.user.create({
+          data: {
+            accountId: account.accountId,
+            name: useName,
+            cash: 1000,
+            userScore: 1000,
+          },
+        });
+        return [account, user];
+      },
+      {
+        //트랜잭션 격리수준 설정
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
+
+    return res.status(201).json({ message: '회원가입이 완료되었습니다.' });
+  } catch (err) {
+    next(err);
   }
-
-  // password 암호화
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // 랜덤 이름 생성
-  const randomName = generateRandomName();
-
-  // account 생성
-  const account = await prisma.account.create({
-    data: {
-      email,
-      password: hashedPassword,
-    },
-  });
-
-  // user 생성
-  const user = await prisma.user.create({
-    data: {
-      accountId: account.accountId,
-      name: randomName,
-      cash: 1000,
-    },
-  });
-
-  return res.status(201).json({ message: '회원가입이 완료되었습니다.' });
 });
 
 // -- 로그인 API -- //
-router.post('/sign-in', async (req, res, next) => {
+router.post('/sign-in', signInValidator, async (req, res, next) => {
   const { email, password } = req.body;
   const account = await prisma.account.findFirst({ where: { email } });
 
@@ -141,9 +161,18 @@ router.patch('/user', authMiddleware, async (req, res, next) => {
 });
 
 // 캐시충전 API
-router.put('/user/chargeCash', authMiddleware, async (req, res, next) => {
+router.put('/user/chargeCash', authMiddleware, cashValidator, async (req, res, next) => {
   const { userId } = req.user;
   const { cash } = req.body;
+
+  // 이메일 검사
+  if (!cash) {
+    return res.status(401).json({ message: '충전할 캐시를 입력해 주세요' });
+  }
+
+  if (cash < 0) {
+    return res.status(400).json({ message: '0 이상의 숫자를 입력해 주세요' });
+  }
 
   try {
     const chargeCash = await prisma.user.update({
