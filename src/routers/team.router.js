@@ -60,12 +60,6 @@ router.get('/userPlayer', authMiddleware, async (req, res, next) => {
         // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
         },
       },
     },
