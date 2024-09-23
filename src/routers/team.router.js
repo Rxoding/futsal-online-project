@@ -448,8 +448,6 @@ router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => 
     const pricePerRare = [1000, 800, 200, 100, 50];
     const curCash = user.cash + pricePerRare[rare - 1];
 
-    console.log('cashToAdd', typeof cashToAdd); // undefined
-
     await prisma.user.update({
       where: { userId: +userId },
       data: { cash: +curCash },
