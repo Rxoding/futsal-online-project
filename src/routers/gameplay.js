@@ -23,33 +23,20 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
   // 승리한 팀의 win 카운트 증가
   await prisma.team.update({
     where: { id: winningTeamId },
-    data: {
-      win: {
-        increment: 1,
-      },
-    },
+    data: { win: { increment: 1 } },
   });
 
   // 패배한 팀의 lose 카운트 증가
   await prisma.team.update({
     where: { id: losingTeamId },
-    data: {
-      lose: {
-        increment: 1,
-      },
-    },
+    data: { lose: { increment: 1 } },
   });
 }
 
 // 랜덤 선수 선택 및 승패 결정
-export async function startGame(
-  teamAIds,
-  teamBIds,
-  teamAName,
-  teamBName,
-  teamAId,
-  teamBId
-) {
+export async function startGame(roster) {
+  const { teamAIds, teamBIds, teamAName, teamBName, teamAId, teamBId } = roster;
+
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },
   });
