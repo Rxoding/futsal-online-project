@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authMiddleware from '../middleWares/auth.middleWare.js';
+import jwtSecretKey from '../utils/jwtSecretKey.js';
 
 const router = express.Router();
 
@@ -89,7 +90,8 @@ router.post('/sign-in', async (req, res, next) => {
     {
       userId: user.userId,
     },
-    'custom-secret-key'
+    jwtSecretKey(),
+    console.log(process.env.SESSION_SECRET_KEY)
   );
 
   // authotization JWT 저장
@@ -99,13 +101,14 @@ router.post('/sign-in', async (req, res, next) => {
 
 // -- 유저 정보 조회 API -- //
 router.get('/user', authMiddleware, async (req, res, next) => {
-  const { name } = req.user;
+  const { userId } = req.user;
 
   const user = await prisma.user.findFirst({
-    where: { name: +name },
+    where: { userId: +userId },
     select: {
       name: true,
       userScore: true,
+      cash: true,
 
       score: {
         select: {

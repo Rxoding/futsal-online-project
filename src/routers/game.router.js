@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { startGame } from "../services/game.service.js"; // 게임 로직이 들어있는 서비스 파일
+import { startGame } from "./gameplay.js"; // 게임 로직이 들어있는 서비스 파일
 
 const router = Router();
 
