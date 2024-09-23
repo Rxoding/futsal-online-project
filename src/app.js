@@ -8,6 +8,8 @@ import gameRouter from './routers/game.router.js';
 import teamRouter from './routers/team.router.js';
 import userRouter from './routers/user.router.js';
 import ErrorHandlingMiddleware from './middlewares/error-handling.middleware.js';
+import swaggerFile from './utils/swagger/swagger-output.json' assert { type: 'json' };
+import swaggerUi from 'swagger-ui-express';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -17,8 +19,10 @@ const PORT = 3029;
 
 app.use(LogMiddleware);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser());
 app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter]);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile, { explorer: true }));
 app.use(ErrorHandlingMiddleware);
 
 app.listen(PORT, () => {
