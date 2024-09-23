@@ -15,11 +15,13 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
       where: { userId: +userId, teamId: teamAId },
       select: { playerId: true },
     });
+    console.log('로스터 A:', rosterA);
 
     const rosterB = await prisma.userPlayer.findMany({
       where: { userId: +userId, teamId: teamBId },
       select: { playerId: true },
     });
+    console.log('로스터 B:', rosterB);
 
     // 로스터 유효성 검사
     if (rosterA.length < 3) {
@@ -46,8 +48,8 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
       teamBIds: playerIdsB,
       teamAName, // 사용자 이름 기반의 팀 A 이름
       teamBName, // 사용자 이름 기반의 팀 B 이름
-      teamAId: teamAId, // 팀 A의 ID
-      teamBId: teamBId, // 팀 B의 ID
+      teamAId, // 팀 A의 ID
+      teamBId, // 팀 B의 ID
     });
     // 결과 반환
     res.status(200).json({
