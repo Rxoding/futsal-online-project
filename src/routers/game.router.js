@@ -10,15 +10,26 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
     const { teamAId, teamBId } = req.body;
     const { userId } = req.user;
 
+    // 사용자 정보 조회
+    const user = await prisma.user.findUnique({
+      where: { userId: +userId },
+      select: { accountId: true, name: true },
+    });
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    const { accountId } = user;
+
     // 로스터 조회
     const rosterA = await prisma.userPlayer.findMany({
-      where: { userId: +userId, teamId: teamAId },
+      where: { teamId: teamAId, userId: userId },
       select: { playerId: true },
     });
     console.log('로스터 A:', rosterA);
 
     const rosterB = await prisma.userPlayer.findMany({
-      where: { userId: +userId, teamId: teamBId },
+      where: { teamId: teamBId, userId: userId },
       select: { playerId: true },
     });
     console.log('로스터 B:', rosterB);
@@ -34,11 +45,6 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
     // playerIds 배열 생성
     const playerIdsA = rosterA.map((player) => player.playerId);
     const playerIdsB = rosterB.map((player) => player.playerId);
-
-    const user = await prisma.user.findUnique({
-      where: { userId: +userId },
-      select: { name: true },
-    });
 
     const teamAName = user ? user.name + '의 팀' : '팀 A'; // 사용자 이름을 팀 A 이름으로 사용
     const teamBName = user ? user.name + '의 팀' : '팀 B'; // 사용자 이름을 팀 B 이름으로 사용
