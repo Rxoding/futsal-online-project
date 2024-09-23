@@ -32,6 +32,10 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
       return res.status(400).json({ message: '팀 B는 최소 3명의 선수가 필요합니다.' });
     }
 
+    // playerIds 배열 생성
+    const playerIdsA = rosterA.map((player) => player.playerId);
+    const playerIdsB = rosterB.map((player) => player.playerId);
+
     const user = await prisma.user.findUnique({
       where: { userId: +userId },
       select: { name: true },
@@ -41,15 +45,20 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
     const teamBName = user ? user.name + '의 팀' : '팀 B'; // 사용자 이름을 팀 B 이름으로 사용
 
     const result = await startGame({
-      teamAIds: rosterA.map((player) => player.playerId),
-      teamBIds: rosterB.map((player) => player.playerId),
+      teamAIds: playerIdsA,
+      teamBIds: playerIdsB,
       teamAName, // 사용자 이름 기반의 팀 A 이름
       teamBName, // 사용자 이름 기반의 팀 B 이름
       teamAId: teamA.teamId, // 팀 A의 ID
       teamBId: teamB.teamId, // 팀 B의 ID
     });
     // 결과 반환
-    res.status(200).json(result);
+    res.status(200).json({
+      message: '게임이 시작되었습니다.',
+      teamA: { playerIds: playerIdsA },
+      teamB: { playerIds: playerIdsB },
+      result,
+    });
   } catch (error) {
     console.error('Error in playgame:', error); // 에러 로그 출력
     next(error); // 에러 처리 미들웨어로 넘김
