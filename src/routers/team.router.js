@@ -430,6 +430,7 @@ router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => 
     // 선수의 count - 1
     await prisma.userPlayer.update({
       where: {
+        Id: +userPlayer.Id,
         userId: +userId,
         playerId: +playerId,
       },
