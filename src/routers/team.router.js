@@ -142,9 +142,7 @@ router.put('/roster', authMiddleware, async (req, res, next) => {
     let playerIds = [...set];
 
     if (playerIds.length != 3)
-      return res
-        .status(401)
-        .json({ message: '로스터는 중복되지 않는 3명을 지정해야합니다.' });
+      return res.status(401).json({ message: '로스터는 중복되지 않는 3명을 지정해야합니다.' });
 
     const result = await prisma.$transaction(async (tx) => {
       const teaminit = await tx.userPlayer.updateMany({
@@ -339,16 +337,12 @@ router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
 
     // 해당 선수가 없는 경우
     if (!userPlayer) {
-      return res
-        .status(404)
-        .json({ error: '해당 선수를 보유하고 있지 않습니다.' });
+      return res.status(404).json({ error: '해당 선수를 보유하고 있지 않습니다.' });
     }
 
     // 이미 최대 강화(10강)인 경우
     if (userPlayer.upgrade >= 10) {
-      return res
-        .status(400)
-        .json({ error: '이미 최대 강화에 도달하였습니다.' });
+      return res.status(400).json({ error: '이미 최대 강화에 도달하였습니다.' });
     }
 
     const requiredCount = userPlayer.upgrade + 1; // 강화에 필요한 카드 수 = 강화치 + 1
@@ -406,4 +400,47 @@ router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
   }
 });
 
+// 카드 판매 API (count 소모)
+router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
+  const { playerId } = req.params;
+  const { userId } = req.user;
+  try {
+    // 유저 정보 가져오기
+    const user = await prisma.user.findFirst({
+      where: { userId: +userId },
+    });
+    const userPlayer = await prisma.userPlayer.findFirst({
+      where: {
+        userId: +userId,
+        playerId: +playerId,
+      },
+    });
+    const Player = await prisma.Player.findFirst({
+      where: {
+        playerId: +playerId,
+      },
+    });
+    // 존재하지 않는 선수일 경우 에러
+    if (!userPlayer) {
+      return res.status(401).json({ error: '존재하지 않는 선수입니다.' });
+    }
+    // 판매할 수 있는 카드가 없으면 에러
+    if (userPlayer.count < 1) {
+      return res.status(401).json({ error: '판매할 수 있는 카드가 없습니다.' });
+    }
+
+    // 판매한 선수의 레어도에 따라 유저에게 캐쉬 지급
+    const rare = Player.rare;
+    const pricePerRare = [1000, 800, 200, 100, 50];
+    const curCash = user.cash + pricePerRare[rare - 1];
+    console.log(user.cash);
+    await prisma.user.update({
+      where: { userId: +userId },
+      data: { cash: curCash },
+    });
+    return res.status(200).json({ message: `카드 판매 완료! (cash + ${pricePerRare[rare - 1]})` });
+  } catch (err) {
+    next(err);
+  }
+});
 export default router;
