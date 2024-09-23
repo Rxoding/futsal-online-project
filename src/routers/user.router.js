@@ -61,6 +61,7 @@ router.post('/sign-up', async (req, res, next) => {
       accountId: account.accountId,
       name: randomName,
       cash: 1000,
+      userScore: 1000,
     },
   });
 
