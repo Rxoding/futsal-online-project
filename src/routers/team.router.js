@@ -57,7 +57,6 @@ router.get('/userPlayer', authMiddleware, async (req, res, next) => {
       count: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
         },
@@ -82,7 +81,6 @@ router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
       teamId: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
           rare: true,
@@ -95,7 +93,13 @@ router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
       },
     },
   });
-
+  if (player.upgrade > 0) {
+    player.player.speed = player.player.speed + player.upgrade;
+    player.player.finishing = player.player.finishing + player.upgrade;
+    player.player.pass = player.player.pass + player.upgrade;
+    player.player.defense = player.player.defense + player.upgrade;
+    player.player.stamina = player.player.stamina + player.upgrade;
+  }
   return res.status(200).json({ data: player });
 });
 
