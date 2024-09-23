@@ -4,6 +4,181 @@ import authMiddleware from '../middleWares/auth.middleWare.js';
 
 const router = express.Router();
 
+/** 테스트용 선수 추가 API **/
+router.post('/test', authMiddleware, async (req, res, next) => {
+  try {
+    const { playerId } = req.body;
+    const { userId } = req.user;
+    const isExistplayercode = await prisma.userPlayer.findFirst({
+      where: {
+        userId: userId,
+        playerId,
+      },
+    });
+    // 선수를 가지고 있다면 선수의 count를 증가시킵니다.
+    if (isExistplayercode) {
+      const count = await prisma.userPlayer.update({
+        where: {
+          Id: isExistplayercode.Id,
+          playerId,
+        },
+        data: {
+          count: isExistplayercode.count + 1,
+        },
+      });
+    } else {
+      // 선수를 가지고 있지 않다면 userPlayer 테이블에 선수를 생성합니다.
+      const player = await prisma.userPlayer.create({
+        data: {
+          userId: +userId,
+          playerId: playerId,
+        },
+      });
+    }
+
+    return res.status(201).json({
+      message: playerId + '이 팀에 추가되었습니다.',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** 보유 선수 조회 API **/
+router.get('/userPlayer', authMiddleware, async (req, res, next) => {
+  const { userId } = req.user;
+
+  const userPlayer = await prisma.userPlayer.findMany({
+    where: { userId: +userId },
+    select: {
+      playerId: true,
+      upgrade: true,
+      teamId: true,
+      count: true,
+      player: {
+        // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
+        // todo upgrade에 따른 스탯 상승 보여줘야함
+        select: {
+          playerName: true,
+          rare: true,
+          speed: true,
+          finishing: true,
+          pass: true,
+          defense: true,
+          stamina: true,
+        },
+      },
+    },
+  });
+
+  return res.status(200).json({ data: userPlayer });
+});
+
+/** 보유 선수 상세조회 API **/
+router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
+  const { playerId } = req.params;
+  const { userId } = req.user;
+  const player = await prisma.userPlayer.findFirst({
+    where: {
+      playerId: +playerId,
+      userId: +userId,
+    },
+    select: {
+      playerId: true,
+      upgrade: true,
+      teamId: true,
+      player: {
+        // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
+        // todo upgrade에 따른 스탯 상승 보여줘야함
+        select: {
+          playerName: true,
+          rare: true,
+          speed: true,
+          finishing: true,
+          pass: true,
+          defense: true,
+          stamina: true,
+        },
+      },
+    },
+  });
+
+  return res.status(200).json({ data: player });
+});
+
+/** 로스터 조회 API **/
+router.get('/roster', authMiddleware, async (req, res, next) => {
+  const { userId } = req.user;
+  const roster = await prisma.userPlayer.findMany({
+    where: { userId: +userId, teamId: 1 },
+    select: {
+      playerId: true,
+      upgrade: true,
+      player: {
+        // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
+        // todo upgrade에 따른 스탯 상승 보여줘야함
+        select: {
+          playerName: true,
+          rare: true,
+          speed: true,
+          finishing: true,
+          pass: true,
+          defense: true,
+          stamina: true,
+        },
+      },
+    },
+  });
+
+  return res.status(200).json({ data: roster });
+});
+
+/** 로스터 변경 API **/
+router.put('/roster', authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { roster } = req.body;
+    let set = new Set(roster.split(','));
+    let playerIds = [...set];
+
+    if (playerIds.length != 3)
+      return res.status(401).json({ message: '로스터는 중복되지 않는 3명을 지정해야합니다.' });
+
+    const result = await prisma.$transaction(async (tx) => {
+      const teaminit = await tx.userPlayer.updateMany({
+        where: { userId: +userId, teamId: 1 },
+        data: {
+          teamId: null,
+        },
+      });
+
+      for (let i = 0; i < playerIds.length; i++) {
+        const isExistplayercode = await tx.userPlayer.findFirst({
+          where: {
+            userId: userId,
+            playerId: +playerIds[i],
+          },
+        });
+
+        if (isExistplayercode) {
+          const user = await tx.userPlayer.update({
+            where: { userId: +userId, Id: isExistplayercode.Id },
+            data: {
+              teamId: 1,
+            },
+          });
+        } else {
+          throw new Error('로스터 변경 트랜잭션 실패');
+        }
+      }
+    });
+
+    return res.status(200).json({ message: '로스터를 수정했습니다.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // 등급 내에서 랜덤한 선수를 뽑는 함수
 async function getRandomPlayer(rare) {
   const players = await prisma.player.findMany({
@@ -14,9 +189,25 @@ async function getRandomPlayer(rare) {
   return players[randomIndex];
 }
 
+function getRandomRare() {
+  const random = Math.random() * 100;
+
+  if (random < 2) {
+    return 1; // 2%
+  } else if (random < 10) {
+    return 2; // 8%
+  } else if (random < 30) {
+    return 3; // 20%
+  } else if (random < 60) {
+    return 4; // 30%
+  } else {
+    return 5; // 40%
+  }
+}
+
 // 선수 뽑기 API
-router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
-  const { userId } = req.params;
+router.get('/gacha', authMiddleware, async (req, res, next) => {
+  const { userId } = req.user;
 
   try {
     // 유저 정보 조회
@@ -24,27 +215,19 @@ router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
       where: { userId: +userId },
     });
 
+    let selectedPlayer;
+
     // 개런티가 80이면 1등급 확정
     if (user.guarantee >= 80) {
-      const selectedPlayer = await getRandomPlayer(1);
+      selectedPlayer = await getRandomPlayer(1);
+      console.log(selectedPlayer);
       await prisma.user.update({
         where: { userId: +userId },
         data: { guarantee: 0 },
       });
     } else {
       // 확률
-      const probability = Math.random(0, 1);
-      if (probability <= 0.02) {
-        const rare = 1; // 2% 확률로 1등급
-      } else if (probability <= 0.1) {
-        const rare = 2; // 8% 확률로 2등급
-      } else if (probability <= 0.3) {
-        const rare = 3; // 20% 확률로 3등급
-      } else if (probability <= 0.6) {
-        const rare = 4; // 30% 확률로 4등급
-      } else {
-        const rare = 5; // 40% 확률로 5등급
-      }
+      const rare = getRandomRare();
 
       // 1등급을 뽑으면 개런티 초기화
       if (rare === 1) {
@@ -59,7 +242,8 @@ router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
           data: { guarantee: user.guarantee + 1 },
         });
       }
-      const selectedPlayer = await getRandomPlayer(rare);
+      selectedPlayer = await getRandomPlayer(rare);
+      console.log(selectedPlayer);
     }
 
     // 존재하지 않는 선수일 경우 에러 발생
@@ -87,7 +271,7 @@ router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
       });
 
       return res.status(200).json({
-        message: `${isExistUserPlayer.name}는 이미 보유하고 있어 강화재료로 변환되었습니다.`,
+        message: `이미 보유하고 있는 선수를 뽑아 강화재료로 변환되었습니다.`,
         player: selectedPlayer,
         userPlayer: updatedUserPlayer,
       });
@@ -98,7 +282,7 @@ router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
       data: {
         userId: +userId,
         playerId: selectedPlayer.playerId,
-        count: 1,
+        count: 0,
         upgrade: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -108,7 +292,6 @@ router.post('/gacha/:userId', authMiddleware, async (req, res, next) => {
     return res.status(201).json({
       message: '새로운 선수가 팀에 합류하였습니다!',
       player: selectedPlayer,
-      userPlayer: newUserPlayer,
     });
   } catch (err) {
     next(err);
@@ -125,8 +308,9 @@ function isUpgradeSuccessed(upgrade) {
 }
 
 // 선수 강화 API
-router.update('/upgrade/:userId/:playerId', authMiddleware, async (req, res, next) => {
-  const { userId, playerId } = req.params;
+router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
+  const { userId } = req.user;
+  const { playerId } = req.params;
 
   try {
     // 유저에게 해당 선수가 있는지 확인
@@ -154,9 +338,9 @@ router.update('/upgrade/:userId/:playerId', authMiddleware, async (req, res, nex
 
     // 강화 재료 부족한 경우
     if (userPlayer.count < requiredCount) {
-      return res
-        .status(400)
-        .json({ error: `강화에 필요한 카드 수가 모자랍니다. (보유: ${userPlayer.count}, 필요: ${requiredCount})` });
+      return res.status(400).json({
+        error: `강화에 필요한 카드 수가 모자랍니다. (보유: ${userPlayer.count}, 필요: ${requiredCount})`,
+      });
     }
 
     // 강화 성공 여부
