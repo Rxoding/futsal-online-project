@@ -7,23 +7,20 @@ const router = Router();
 
 router.post('/playgame', authMiddleware, async (req, res, next) => {
   try {
-    const { teamA, teamB } = req.body;
+    const { teamAId, teamBId } = req.body;
     const { userId } = req.user;
 
     // 로스터 조회
     const rosterA = await prisma.userPlayer.findMany({
-      where: { userId: +userId, teamId: teamA.teamId }, //팀 A의 ID 사용
-      select: {
-        playerId: true,
-      },
+      where: { userId: +userId, teamId: teamAId },
+      select: { playerId: true },
     });
 
     const rosterB = await prisma.userPlayer.findMany({
-      where: { userId: +userId, teamId: teamB.teamId }, //팀 B의 ID 사용
-      select: {
-        playerId: true,
-      },
+      where: { userId: +userId, teamId: teamBId },
+      select: { playerId: true },
     });
+
     // 로스터 유효성 검사
     if (rosterA.length < 3) {
       return res.status(400).json({ message: '팀 A는 최소 3명의 선수가 필요합니다.' });
@@ -49,8 +46,8 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
       teamBIds: playerIdsB,
       teamAName, // 사용자 이름 기반의 팀 A 이름
       teamBName, // 사용자 이름 기반의 팀 B 이름
-      teamAId: teamA.teamId, // 팀 A의 ID
-      teamBId: teamB.teamId, // 팀 B의 ID
+      teamAId: teamAId, // 팀 A의 ID
+      teamBId: teamBId, // 팀 B의 ID
     });
     // 결과 반환
     res.status(200).json({
