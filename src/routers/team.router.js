@@ -46,64 +46,63 @@ router.post('/test', authMiddleware, async (req, res, next) => {
 
 /** 보유 선수 조회 API **/
 router.get('/userPlayer', authMiddleware, async (req, res, next) => {
-  const { userId } = req.user;
+    const { userId } = req.user;
 
-  const userPlayer = await prisma.userPlayer.findMany({
-    where: { userId: +userId },
-    select: {
-      playerId: true,
-      upgrade: true,
-      teamId: true,
-      count: true,
-      player: {
-        // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
+    const userPlayer = await prisma.userPlayer.findMany({
+        where: { userId: +userId },
         select: {
-          playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
+            playerId: true,
+            upgrade: true,
+            teamId: true,
+            count: true,
+            player: {
+                // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
+                // todo upgrade에 따른 스탯 상승 보여줘야함
+                select: {
+                    playerName: true,
+                    rare: true,
+                    speed: true,
+                    finishing: true,
+                    pass: true,
+                    defense: true,
+                    stamina: true,
+                },
+            },
         },
-      },
-    },
-  });
+    });
 
-  return res.status(200).json({ data: userPlayer });
+    return res.status(200).json({ data: userPlayer });
 });
 
 /** 보유 선수 상세조회 API **/
 router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
-  const { playerId } = req.params;
-  const { userId } = req.user;
-  const player = await prisma.userPlayer.findFirst({
-    where: {
-      playerId: +playerId,
-      userId: +userId,
-    },
-    select: {
-      playerId: true,
-      upgrade: true,
-      teamId: true,
-      player: {
-        // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
-        select: {
-          playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
+    const { playerId } = req.params;
+    const { userId } = req.user;
+    const player = await prisma.userPlayer.findFirst({
+        where: {
+            playerId: +playerId, userId: +userId
         },
-      },
-    },
-  });
+        select: {
+            playerId: true,
+            upgrade: true,
+            teamId: true,
+            player: {
+                // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
+                // todo upgrade에 따른 스탯 상승 보여줘야함
+                select: {
+                    playerName: true,
+                    rare: true,
+                    speed: true,
+                    finishing: true,
+                    pass: true,
+                    defense: true,
+                    stamina: true,
+                },
+            },
+        },
+    });
 
-  return res.status(200).json({ data: player });
+    return res.status(200).json({ data: player });
 });
 
 /** 로스터 조회 API **/
