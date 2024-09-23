@@ -1,4 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import dotenv from "dotenv";
+dotenv.config();
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
@@ -6,7 +8,7 @@ async function main() {
     data: [
       // 1등급 (Top 10% - 3명)
       {
-        playerName: 'Lionel Messi',
+        playerName: "Lionel Messi",
         rare: 1,
         speed: 85,
         finishing: 90,
@@ -15,7 +17,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Cristiano Ronaldo',
+        playerName: "Cristiano Ronaldo",
         rare: 1,
         speed: 88,
         finishing: 90,
@@ -24,7 +26,7 @@ async function main() {
         stamina: 85,
       },
       {
-        playerName: 'Kylian Mbappe',
+        playerName: "Kylian Mbappe",
         rare: 1,
         speed: 90,
         finishing: 88,
@@ -35,7 +37,7 @@ async function main() {
 
       // 2등급 (Top 20% - 6명)
       {
-        playerName: 'Neymar',
+        playerName: "Neymar",
         rare: 2,
         speed: 85,
         finishing: 85,
@@ -44,7 +46,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Kevin De Bruyne',
+        playerName: "Kevin De Bruyne",
         rare: 2,
         speed: 75,
         finishing: 80,
@@ -53,7 +55,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Mohamed Salah',
+        playerName: "Mohamed Salah",
         rare: 2,
         speed: 88,
         finishing: 85,
@@ -62,7 +64,7 @@ async function main() {
         stamina: 85,
       },
       {
-        playerName: 'Robert Lewandowski',
+        playerName: "Robert Lewandowski",
         rare: 2,
         speed: 78,
         finishing: 90,
@@ -71,7 +73,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Harry Kane',
+        playerName: "Harry Kane",
         rare: 2,
         speed: 75,
         finishing: 88,
@@ -80,7 +82,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Erling Haaland',
+        playerName: "Erling Haaland",
         rare: 2,
         speed: 88,
         finishing: 90,
@@ -91,7 +93,7 @@ async function main() {
 
       // 3등급 (Top 26.7% - 8명)
       {
-        playerName: 'Federico Valverde',
+        playerName: "Federico Valverde",
         rare: 3,
         speed: 85,
         finishing: 75,
@@ -100,7 +102,7 @@ async function main() {
         stamina: 85,
       },
       {
-        playerName: 'Joshua Kimmich',
+        playerName: "Joshua Kimmich",
         rare: 3,
         speed: 75,
         finishing: 70,
@@ -109,7 +111,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Antoine Griezmann',
+        playerName: "Antoine Griezmann",
         rare: 3,
         speed: 80,
         finishing: 80,
@@ -118,7 +120,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Trent Alexander-Arnold',
+        playerName: "Trent Alexander-Arnold",
         rare: 3,
         speed: 82,
         finishing: 70,
@@ -127,7 +129,7 @@ async function main() {
         stamina: 78,
       },
       {
-        playerName: 'Bukayo Saka',
+        playerName: "Bukayo Saka",
         rare: 3,
         speed: 85,
         finishing: 78,
@@ -136,7 +138,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Luka Modric',
+        playerName: "Luka Modric",
         rare: 3,
         speed: 75,
         finishing: 70,
@@ -145,7 +147,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Bruno Fernandes',
+        playerName: "Bruno Fernandes",
         rare: 3,
         speed: 78,
         finishing: 75,
@@ -154,7 +156,7 @@ async function main() {
         stamina: 78,
       },
       {
-        playerName: 'Martin Odegaard',
+        playerName: "Martin Odegaard",
         rare: 3,
         speed: 78,
         finishing: 75,
@@ -165,7 +167,7 @@ async function main() {
 
       // 4등급 (Top 23.3% - 7명)
       {
-        playerName: 'Paulo Dybala',
+        playerName: "Paulo Dybala",
         rare: 4,
         speed: 80,
         finishing: 80,
@@ -174,7 +176,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Raheem Sterling',
+        playerName: "Raheem Sterling",
         rare: 4,
         speed: 85,
         finishing: 78,
@@ -183,7 +185,7 @@ async function main() {
         stamina: 78,
       },
       {
-        playerName: 'Marquinhos',
+        playerName: "Marquinhos",
         rare: 4,
         speed: 75,
         finishing: 60,
@@ -192,7 +194,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'Jordi Alba',
+        playerName: "Jordi Alba",
         rare: 4,
         speed: 80,
         finishing: 60,
@@ -201,7 +203,7 @@ async function main() {
         stamina: 78,
       },
       {
-        playerName: 'Declan Rice',
+        playerName: "Declan Rice",
         rare: 4,
         speed: 78,
         finishing: 60,
@@ -210,7 +212,7 @@ async function main() {
         stamina: 80,
       },
       {
-        playerName: 'William Saliba',
+        playerName: "William Saliba",
         rare: 4,
         speed: 75,
         finishing: 55,
@@ -219,7 +221,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Leroy Sane',
+        playerName: "Leroy Sane",
         rare: 4,
         speed: 85,
         finishing: 78,
@@ -230,7 +232,7 @@ async function main() {
 
       // 5등급 (Top 20% - 6명)
       {
-        playerName: 'Kai Havertz',
+        playerName: "Kai Havertz",
         rare: 5,
         speed: 78,
         finishing: 75,
@@ -239,7 +241,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Lamine Yamal',
+        playerName: "Lamine Yamal",
         rare: 5,
         speed: 80,
         finishing: 75,
@@ -248,7 +250,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Mason Mount',
+        playerName: "Mason Mount",
         rare: 5,
         speed: 78,
         finishing: 73,
@@ -257,7 +259,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Reece James',
+        playerName: "Reece James",
         rare: 5,
         speed: 80,
         finishing: 65,
@@ -266,7 +268,7 @@ async function main() {
         stamina: 78,
       },
       {
-        playerName: 'Phil Foden',
+        playerName: "Phil Foden",
         rare: 5,
         speed: 82,
         finishing: 78,
@@ -275,7 +277,7 @@ async function main() {
         stamina: 75,
       },
       {
-        playerName: 'Pedri',
+        playerName: "Pedri",
         rare: 5,
         speed: 80,
         finishing: 75,
@@ -289,7 +291,7 @@ async function main() {
 
 main()
   .then(() => {
-    console.log('Seeding complete');
+    console.log("Seeding complete");
   })
   .catch((e) => {
     console.error(e);
