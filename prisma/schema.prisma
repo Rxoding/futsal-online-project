@@ -25,7 +25,7 @@ model Account {
 model User {
   userId      Int       @id @default(autoincrement()) @map("userId")
   accountId   Int       @unique @map("accountId")
-  name        String    @map("name")
+  name        String    @unique @map("name")
   cash        Int       @map("cash")
   guarantee   Int       @default(0) @map("guarantee")
   userScore   Int       @default(0) @map("userScore")

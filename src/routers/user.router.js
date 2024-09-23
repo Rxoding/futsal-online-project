@@ -9,19 +9,11 @@ const router = express.Router();
 
 // 랜덤 이름 생성 함수
 function generateRandomName() {
-  const adjectives = [
-    '상큼한',
-    '달콤한',
-    '시원한',
-    '기분좋은',
-    '매혹적인',
-    '차가운',
-  ];
+  const adjectives = ['상큼한', '달콤한', '시원한', '기분좋은', '매혹적인', '차가운'];
   const nouns = ['레몬', '쿠키', '딸기', '바닐라', '초코', '잼', '사과'];
 
   // 랜덤하게 선택
-  const randomAdjective =
-    adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
   const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
 
   // 조합하여 반환
@@ -91,7 +83,7 @@ router.post('/sign-in', async (req, res, next) => {
       userId: user.userId,
     },
     jwtSecretKey(),
-    console.log(process.env.SESSION_SECRET_KEY)
+    console.log(process.env.SESSION_SECRET_KEY),
   );
 
   // authotization JWT 저장
@@ -123,6 +115,31 @@ router.get('/user', authMiddleware, async (req, res, next) => {
   return res.status(200).json({ data: user });
 });
 
+// 유저 이름 변경 API
+router.patch('/user', authMiddleware, async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { name } = req.body;
+
+    const isExistName = await prisma.user.findFirst({
+      where: { name: name },
+    });
+
+    if (isExistName) {
+      return res.status(404).json({ error: '중복되는 닉네임입니다.' });
+    }
+
+    const updatedUserName = await prisma.user.update({
+      where: { userId: +userId },
+      data: { name: name },
+    });
+
+    return res.status(200).json({ message: '닉네임을 성공적으로 변경하였습니다.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // 캐시충전 API
 router.put('/user/chargeCash', authMiddleware, async (req, res, next) => {
   const { userId } = req.user;
@@ -137,9 +154,7 @@ router.put('/user/chargeCash', authMiddleware, async (req, res, next) => {
         },
       },
     });
-    return res
-      .status(200)
-      .json(`${cash}원을 충전하였습니다. 캐시 총액: ${chargeCash.cash}`);
+    return res.status(200).json(`${cash}원을 충전하였습니다. 캐시 총액: ${chargeCash.cash}`);
   } catch (err) {
     next(err);
   }
