@@ -44,13 +44,14 @@ export async function startGame(roster) {
     where: { playerId: { in: teamBIds } },
   });
 
+  const MAX_SCORE = 3;
   let scoreA = 0;
   let scoreB = 0;
   let draws = 0;
   const gameLog = [];
 
   // 경기가 끝날 때까지 계속 진행
-  while (scoreA < 3 && scoreB < 3) {
+  while (scoreA < MAX_SCORE && scoreB < MAX_SCORE) {
     const randomPlayerA = playersA[Math.floor(Math.random() * playersA.length)];
     const randomPlayerB = playersB[Math.floor(Math.random() * playersB.length)];
 
@@ -85,11 +86,12 @@ export async function startGame(roster) {
   }
 
   // 최종 승리 팀 결정
-  const winner = scoreA === 3 ? teamAName : scoreB === 3 ? teamBName : null;
+  const winner =
+    scoreA === MAX_SCORE ? teamAName : scoreB === MAX_SCORE ? teamBName : null;
 
   // 게임 결과 반환 및 승패 카운트 업데이트
   if (winner) {
-    if (scoreA === 3) {
+    if (scoreA === MAX_SCORE) {
       // A팀 승리, B팀 패배
       await updateTeamStats(teamAId, teamBId);
     } else {

@@ -22,18 +22,26 @@ router.post("/playgame", async (req, res, next) => {
         playerId: true,
       },
     });
-
+    // 로스터 유효성 검사
     if (rosterA.length < 3 || rosterB.length < 3) {
       return res
         .status(400)
         .json({ message: "각 팀은 최소 3명의 선수가 필요합니다." });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: +userId },
+      select: { name: true },
+    });
+
+    const teamAName = user ? user.name + "의 팀" : "팀 A"; // 사용자 이름을 팀 A 이름으로 사용
+    const teamBName = user ? user.name + "의 팀" : "팀 B"; // 사용자 이름을 팀 B 이름으로 사용
+
     const result = await startGame({
       teamAIds: rosterA.map((player) => player.playerId),
       teamBIds: rosterB.map((player) => player.playerId),
-      teamAName: "팀 A", // 팀 이름을 적절히 설정하세요
-      teamBName: "팀 B", // 팀 이름을 적절히 설정하세요
+      teamAName, // 사용자 이름 기반의 팀 A 이름
+      teamBName, // 사용자 이름 기반의 팀 B 이름
       teamAId: 1, // 팀 A의 ID
       teamBId: 2, // 팀 B의 ID
     });
