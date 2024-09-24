@@ -10,7 +10,7 @@ export function calculateScore(player) {
     stamina: 0.2,
   };
   return (
-    player.speed * weights.speed +
+    Player.speed * weights.speed +
     player.finishing * weights.finishing +
     player.pass * weights.pass +
     player.defense * weights.defense +
@@ -32,7 +32,7 @@ async function insertInitialData(userId) {
           win: 0,
           lose: 0,
           draw: 0,
-          // points: 1000, // 기본 점수 1000
+          //points: 1000, // 기본 점수 1000
         },
       });
       console.log('초기 데이터가 삽입되었습니다. userId:', userId);
@@ -68,13 +68,13 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
     // 승리한 팀의 점수 증가
     await prisma.score.update({
       where: { userId: winningTeamId },
-      data: { win: { increment: 1 } }, //points: { increment: 10 } }, // +10점
+      data: { win: { increment: 1 } } /*, points: { increment: 10 } }, // +10점*/,
     });
 
     // 패배한 팀의 점수 감소
     await prisma.score.update({
       where: { userId: losingTeamId },
-      data: { lose: { increment: 1 } }, //points: { decrement: 10 } }, // -10점
+      data: { lose: { increment: 1 } } /*, points: { decrement: 10 } }, // -10점*/,
     });
   } catch (error) {
     console.error('Error updating team stats:', error);
@@ -85,6 +85,9 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
 // 랜덤 선수 선택 및 승패 결정
 export async function startGame(roster) {
   const { teamAIds, teamBIds, teamAName, teamBName, teamAId, teamBId } = roster;
+
+  console.log('Team A ID:', teamAId);
+  console.log('Team B ID:', teamBId);
 
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },
@@ -160,6 +163,6 @@ export async function startGame(roster) {
     };
   }
 }
-
+/*
 // 초기 데이터 삽입 호출
-//insertInitialData(1);
+insertInitialData(1); */

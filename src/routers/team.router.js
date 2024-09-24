@@ -1,48 +1,8 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
-import authMiddleware from '../middlewares/auth.middleWare.js';
+import authMiddleware from '../middlewares/auth/auth.middleware.js';
 
 const router = express.Router();
-
-/** 테스트용 선수 추가 API **/
-router.post('/test', authMiddleware, async (req, res, next) => {
-  try {
-    const { playerId } = req.body;
-    const { userId } = req.user;
-    const isExistplayercode = await prisma.userPlayer.findFirst({
-      where: {
-        userId: userId,
-        playerId,
-      },
-    });
-    // 선수를 가지고 있다면 선수의 count를 증가시킵니다.
-    if (isExistplayercode) {
-      const count = await prisma.userPlayer.update({
-        where: {
-          Id: isExistplayercode.Id,
-          playerId,
-        },
-        data: {
-          count: isExistplayercode.count + 1,
-        },
-      });
-    } else {
-      // 선수를 가지고 있지 않다면 userPlayer 테이블에 선수를 생성합니다.
-      const player = await prisma.userPlayer.create({
-        data: {
-          userId: +userId,
-          playerId: playerId,
-        },
-      });
-    }
-
-    return res.status(201).json({
-      message: playerId + '이 팀에 추가되었습니다.',
-    });
-  } catch (err) {
-    next(err);
-  }
-});
 
 /** 보유 선수 조회 API **/
 router.get('/userPlayer', authMiddleware, async (req, res, next) => {
@@ -57,15 +17,8 @@ router.get('/userPlayer', authMiddleware, async (req, res, next) => {
       count: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
         },
       },
     },
@@ -89,7 +42,6 @@ router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
       teamId: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
           rare: true,
@@ -102,7 +54,13 @@ router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
       },
     },
   });
-
+  if (player.upgrade > 0) {
+    player.player.speed = player.player.speed + player.upgrade;
+    player.player.finishing = player.player.finishing + player.upgrade;
+    player.player.pass = player.player.pass + player.upgrade;
+    player.player.defense = player.player.defense + player.upgrade;
+    player.player.stamina = player.player.stamina + player.upgrade;
+  }
   return res.status(200).json({ data: player });
 });
 
@@ -116,15 +74,8 @@ router.get('/roster', authMiddleware, async (req, res, next) => {
       upgrade: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
         },
       },
     },
@@ -215,6 +166,17 @@ router.get('/gacha', authMiddleware, async (req, res, next) => {
       where: { userId: +userId },
     });
 
+    // 캐시가 부족하면 에러 발생
+    if (user.cash < 100) {
+      return res.status(400).json({ error: '캐시가 부족합니다!' });
+    }
+
+    // 캐시 -1000
+    await prisma.user.update({
+      where: { userId: +userId },
+      data: { cash: user.cash - 100 },
+    });
+
     let selectedPlayer;
 
     // 개런티가 80이면 1등급 확정
@@ -273,7 +235,6 @@ router.get('/gacha', authMiddleware, async (req, res, next) => {
       return res.status(200).json({
         message: `이미 보유하고 있는 선수를 뽑아 강화재료로 변환되었습니다.`,
         player: selectedPlayer,
-        userPlayer: updatedUserPlayer,
       });
     }
 
@@ -384,6 +345,66 @@ router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
 
       return res.status(200).json({ message: '강화에 실패하였습니다..' });
     }
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 카드 판매 API (count 소모)
+router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
+  const { playerId } = req.params;
+  const { userId } = req.user;
+
+  try {
+    // 유저 정보 가져오기
+    const user = await prisma.user.findFirst({
+      where: { userId: +userId },
+    });
+
+    const userPlayer = await prisma.userPlayer.findFirst({
+      where: {
+        userId: +userId,
+        playerId: +playerId,
+      },
+    });
+
+    // 존재하지 않는 선수일 경우 에러
+    if (!userPlayer) {
+      return res.status(401).json({ error: '존재하지 않는 선수입니다.' });
+    }
+
+    // 판매할 수 있는 카드가 없으면 에러
+    if (userPlayer.count < 1) {
+      return res.status(401).json({ error: '판매할 수 있는 카드가 없습니다.' });
+    }
+
+    // 선수의 count - 1
+    await prisma.userPlayer.update({
+      where: {
+        Id: +userPlayer.Id,
+        userId: +userId,
+        playerId: +playerId,
+      },
+      data: {
+        count: userPlayer.count - 1,
+        updatedAt: new Date(),
+      },
+    });
+
+    // 판매한 선수의 레어도에 따라 유저에게 캐쉬 지급
+    const player = await prisma.player.findFirst({
+      where: { playerId: +playerId },
+    });
+    const rare = player.rare;
+    const pricePerRare = [1000, 800, 200, 100, 50];
+    const curCash = user.cash + pricePerRare[rare - 1];
+
+    await prisma.user.update({
+      where: { userId: +userId },
+      data: { cash: +curCash },
+    });
+
+    return res.status(200).json({ message: `카드 판매 완료! (cash + ${pricePerRare[rare - 1]})` });
   } catch (err) {
     next(err);
   }
