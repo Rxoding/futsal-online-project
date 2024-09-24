@@ -47,7 +47,7 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
     const useName = name || generateRandomName();
 
     // 트랜잭션 사용
-    const [account, user] = await prisma.$transaction(
+    const [account, user, score] = await prisma.$transaction(
       async (tx) => {
         // account 생성
         const account = await prisma.account.create({
@@ -65,7 +65,16 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
             userScore: 1000,
           },
         });
-        return [account, user];
+        // score 생성
+        const score = await prisma.score.create({
+          data: {
+            userId: user.userId,
+            win: 0,
+            lose: 0,
+            draw: 0,
+          },
+        });
+        return [account, user, score];
       },
       {
         //트랜잭션 격리수준 설정
