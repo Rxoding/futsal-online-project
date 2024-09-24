@@ -101,6 +101,7 @@ export async function startGame(roster) {
   let scoreB = 0;
   let draws = 0;
   const gameLog = [];
+  const gameTimes = [];
 
   // 경기가 끝날 때까지 계속 진행
   while (scoreA < MAX_SCORE && scoreB < MAX_SCORE) {
@@ -110,33 +111,52 @@ export async function startGame(roster) {
     const playerScoreA = calculateScore(randomPlayerA);
     const playerScoreB = calculateScore(randomPlayerB);
 
-    const gameTime = `${Math.floor(Math.random() * 90) + 1}분`;
+    let gameTime;
+    if (scoreA + scoreB === 0) {
+      gameTime = Math.floor(Math.random() * 11); // 0~10분
+    } else if (scoreA + scoreB === 1) {
+      gameTime = Math.floor(Math.random() * (40 - 10 + 1)) + 10; // 10~40분
+    } else if (scoreA + scoreB === 2) {
+      gameTime = Math.floor(Math.random() * (60 - 40 + 1)) + 40; // 40~60분
+    } else if (scoreA + scoreB === 3) {
+      gameTime = Math.floor(Math.random() * (80 - 60 + 1)) + 60; // 60~80분
+    } else if (scoreA + scoreB === 4) {
+      gameTime = Math.floor(Math.random() * (90 - 80 + 1)) + 80; // 80~90분
+    }
+    gameTimes.push(gameTime); // 시간을 배열에 저장
 
     // 선수 점수 비교
     if (playerScoreA > playerScoreB) {
       scoreA++;
       gameLog.push({
-        gameTime,
+        gameTime: `${gameTime}분`,
         goalTeam: teamAName,
         goalPlayer: randomPlayerA.playerName,
       });
     } else if (playerScoreB > playerScoreA) {
       scoreB++;
       gameLog.push({
-        gameTime,
+        gameTime: `${gameTime}분`,
         goalTeam: teamBName,
         goalPlayer: randomPlayerB.playerName,
       });
     } else {
       draws++;
       gameLog.push({
-        gameTime,
+        gameTime: `${gameTime}분`,
         goalTeam: '무승부',
         goalPlayer: '양 팀 선수 모두가 막상막하네요.',
       });
     }
   }
-
+  for (let i = 0; i < gameLog.length; i++) {
+    gameLog[i].gameTime = `${gameTimes[i]}분`;
+  }
+  gameLog.sort((a, b) => {
+    const timeA = parseInt(a.gameTime);
+    const timeB = parseInt(b.gameTime);
+    return timeA - timeB;
+  });
   // 최종 승리 팀 결정
   const winner = scoreA === MAX_SCORE ? teamAName : scoreB === MAX_SCORE ? teamBName : null;
 
@@ -163,6 +183,6 @@ export async function startGame(roster) {
     };
   }
 }
-/*
+
 // 초기 데이터 삽입 호출
-insertInitialData(1); */
+/*insertInitialData(1); */
