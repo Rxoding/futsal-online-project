@@ -113,15 +113,8 @@ router.get('/roster', authMiddleware, async (req, res, next) => {
       upgrade: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
         },
       },
     },
