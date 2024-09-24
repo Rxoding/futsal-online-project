@@ -75,7 +75,7 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
           },
         });
         // score 생성
-        const score = await prisma.score.create({
+        const score = await tx.score.create({
           data: {
             userId: user.userId,
             win: 0,
@@ -148,11 +148,10 @@ router.get('/user/:userId', authMiddleware, async (req, res, next) => {
         },
       },
 
-      ...( requestingUserId === +userId && {
+      ...(requestingUserId === +userId && {
         cash: true,
         guarantee: true,
       }),
-
     },
   });
 
@@ -162,7 +161,6 @@ router.get('/user/:userId', authMiddleware, async (req, res, next) => {
 
   return res.status(200).json({ data: user });
 });
-
 
 // 유저 이름 변경 API
 router.patch('/user', authMiddleware, async (req, res, next) => {
