@@ -20,16 +20,35 @@ export function calculateScore(player) {
 
 // 승리 및 패배 카운트 업데이트 함수
 async function updateTeamStats(winningTeamId, losingTeamId) {
+  console.log(
+    `Updating stats for Winning Team ID: ${winningTeamId}, Losing Team ID: ${losingTeamId}`,
+  );
+
   try {
+    const winningTeam = await prisma.score.findUnique({
+      where: { userId: winningTeamId },
+    });
+
+    const losingTeam = await prisma.score.findUnique({
+      where: { userId: losingTeamId },
+    });
+
+    if (!winningTeam) {
+      throw new Error(`Winning team with userId ${winningTeamId} not found.`);
+    }
+    if (!losingTeam) {
+      throw new Error(`Losing team with userId ${losingTeamId} not found.`);
+    }
+
     // 승리한 팀의 win 카운트 증가
-    await prisma.team.update({
-      where: { id: winningTeamId },
+    await prisma.score.update({
+      where: { userId: winningTeamId },
       data: { win: { increment: 1 } },
     });
 
     // 패배한 팀의 lose 카운트 증가
-    await prisma.team.update({
-      where: { id: losingTeamId },
+    await prisma.score.update({
+      where: { userId: losingTeamId },
       data: { lose: { increment: 1 } },
     });
   } catch (error) {
@@ -37,6 +56,7 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
     throw new Error('팀 통계 업데이트 실패');
   }
 }
+
 // 랜덤 선수 선택 및 승패 결정
 export async function startGame(roster) {
   const { teamAIds, teamBIds, teamAName, teamBName, teamAId, teamBId } = roster;
