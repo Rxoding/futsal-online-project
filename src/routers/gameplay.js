@@ -86,9 +86,6 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
 export async function startGame(roster) {
   const { teamAIds, teamBIds, teamAName, teamBName, teamAId, teamBId } = roster;
 
-  console.log('Team A ID:', teamAId);
-  console.log('Team B ID:', teamBId);
-
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },
   });
