@@ -1,0 +1,415 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "futsal-online-project",
+    "description": " 풋살 온라인 api "
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3029",
+      "description": ""
+    }
+  ],
+  "tags": [
+    {
+      "name": "Play",
+      "description": "게임 플레이 API",
+
+      "name": "PlayerDB",
+      "description": "선수 DB API",
+
+      "name": "Ranking",
+      "description": "랭킹 API",
+
+      "name": "Gacha",
+      "description": "가챠 API",
+
+      "name": "Team",
+      "description": "팀 관련 API",
+
+      "name": "Users",
+      "description": "유저 관련 API"
+    }
+  ],
+  "paths": {
+    "/api/sign-up": {
+      "post": {
+        "summary": "회원가입",
+        "tags": ["Users"],
+        "description": "email와 비밀번호를 입력받아 회원가입하는 API",
+        "responses": {
+          "201": {
+            "description": "회원가입이 완료되었습니다."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "409": {
+            "description": "이미 존재하는 이메일입니다."
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "example": "any@gmail.com"
+                  },
+                  "password": {
+                    "example": "aaaa4321"
+                  },
+                  "name": {
+                    "example": "홍길동"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sign-in": {
+      "post": {
+        "summary": "로그인",
+        "tags": ["Users"],
+        "description": "email와 비밀번호를 입력받아 검증후 로그인하는 API",
+        "responses": {
+          "200": {
+            "description": "로그인 되었습니다 !"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "존재하지 않는 이메일입니다. \n\n 비밀번호가 일치하지 않습니다."
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "example": "any@gmail.com"
+                  },
+                  "password": {
+                    "example": "aaaa4321"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user": {
+      "get": {
+        "summary": "유저 정보 조회",
+        "tags": ["Users"],
+        "description": "로그인 한 유저 정보 조회 API",
+        "responses": {
+          "200": {
+            "description": "유저 정보"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "summary": "유저 이름 변경",
+        "tags": ["Users"],
+        "description": "유저의 이름을 변경하는 API",
+        "responses": {
+          "200": {
+            "description": "닉네임을 성공적으로 변경하였습니다."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "중복되는 닉네임입니다."
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "example": "이순신"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/chargeCash": {
+      "put": {
+        "summary": "캐시 충전",
+        "tags": ["Users"],
+        "description": "캐시 충전하는 API",
+        "responses": {
+          "200": {
+            "description": "10000원을 충전하였습니다. 캐시 총액:11000"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cash": {
+                    "example": 10000
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/userPlayer": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/userPlayer/{playerId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/roster": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "roster": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gacha": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/upgrade/{playerId}": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/ranking": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/player": {
+      "get": {
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/player/{playerId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/playgame": {
+      "post": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "teamAId": {
+                    "example": "any"
+                  },
+                  "teamBId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "jwt": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+      }
+    }
+  }
+}
