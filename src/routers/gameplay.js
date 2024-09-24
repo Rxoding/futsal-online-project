@@ -10,7 +10,7 @@ export function calculateScore(player) {
     stamina: 0.2,
   };
   return (
-    Player.speed * weights.speed +
+    player.speed * weights.speed +
     player.finishing * weights.finishing +
     player.pass * weights.pass +
     player.defense * weights.defense +
