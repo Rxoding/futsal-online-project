@@ -37,7 +37,7 @@ router.post('/friendlymatch/:opponent', authMiddleware, async (req, res, next) =
     });
     console.log('로스터 A:', rosterA);
     const rosterB = await prisma.userPlayer.findMany({
-      where: { userId: +opponent },
+      where: { userId: +opponent, teamId: 1 },
       select: {
         playerId: true,
         upgrade: true,
