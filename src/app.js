@@ -21,7 +21,8 @@ const PORT = 3029;
 app.use(LogMiddleware);
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter]);
+app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter, transperRouter]);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile, { explorer: true }));
 app.use(ErrorHandlingMiddleware);
 
 app.listen(PORT, () => {
