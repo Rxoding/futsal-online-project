@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma/index.js';
 
 // 팀 점수 계산 함수
-export function calculateScore(player) {
+export function calculateScore(player, upgrade) {
   const weights = {
     speed: 0.1,
     finishing: 0.25,
@@ -10,72 +10,65 @@ export function calculateScore(player) {
     stamina: 0.2,
   };
   return (
-    Player.speed * weights.speed +
-    player.finishing * weights.finishing +
-    player.pass * weights.pass +
-    player.defense * weights.defense +
-    player.stamina * weights.stamina
+    (player.speed + upgrade) * weights.speed +
+    (player.finishing + upgrade) * weights.finishing +
+    (player.pass + upgrade) * weights.pass +
+    (player.defense + upgrade) * weights.defense +
+    (player.stamina + upgrade) * weights.stamina
   );
 }
-/*
-// 데이터 삽입 함수
-async function insertInitialData(userId) {
-  try {
-    const existingScore = await prisma.score.findUnique({
-      where: { userId },
-    });
 
-    if (!existingScore) {
-      await prisma.score.create({
-        data: {
-          userId,
-          win: 0,
-          lose: 0,
-          draw: 0,
-          //points: 1000, // 기본 점수 1000
-        },
-      });
-      console.log('초기 데이터가 삽입되었습니다. userId:', userId);
-    } else {
-      console.log('해당 userId의 데이터가 이미 존재합니다.');
-    }
-  } catch (error) {
-    console.error('데이터 삽입 오류:', error);
-  }
-}
-*/
 // 승리 및 패배 카운트 업데이트 함수
-async function updateTeamStats(winningTeamId, losingTeamId) {
-  console.log(
-    `Updating stats for Winning Team ID: ${winningTeamId}, Losing Team ID: ${losingTeamId}`,
-  );
-
+async function updateTeamStats(winningTeamId, losingTeamId, drawCount) {
   try {
-    // 승리한 팀의 현재 점수 가져오기
-    const winningTeam = await prisma.score.findUnique({
-      where: { userId: winningTeamId },
-    });
+    // draw가 아닐때
+    if (drawCount == 0) {
+      console.log(`통계 업데이트 중 우승 팀 ID : ${winningTeamId}, 패배 팀 ID: ${losingTeamId}`);
 
-    // 패배한 팀의 현재 점수 가져오기
-    const losingTeam = await prisma.score.findUnique({
-      where: { userId: losingTeamId },
-    });
+      // 승리한 팀의 현재 점수 가져오기
+      const winningTeam = await prisma.score.findUnique({
+        where: { userId: +winningTeamId },
+      });
 
-    if (!winningTeam || !losingTeam) {
-      throw new Error(`팀의 점수를 찾을 수 없습니다.`);
+      // 패배한 팀의 현재 점수 가져오기
+      const losingTeam = await prisma.score.findUnique({
+        where: { userId: +losingTeamId },
+      });
+
+      if (!winningTeam || !losingTeam) {
+        throw new Error(`팀의 점수를 찾을 수 없습니다.`);
+      }
+
+      // 승리한 팀의 점수 증가
+      await prisma.user.update({
+        where: { userId: winningTeamId },
+        data: { userScore: { increment: 10 } } // +10점
+      });
+      await prisma.score.update({
+        where: { userId: winningTeamId },
+        data: { win: { increment: 1 } }       // win +1
+      });
+
+      // 패배한 팀의 점수 감소
+      await prisma.user.update({
+        where: { userId: losingTeamId },
+        data: { userScore: { decrement: 10 } } // -10점
+      });
+      await prisma.score.update({
+        where: { userId: losingTeamId },
+        data: { lose: { increment: 1 } } // lose +1 
+      });
+    } else {    // draw일때 
+      // 두팀 다 draw +1, 점수 감소는 없음
+      await prisma.score.update({
+        where: { userId: winningTeamId },
+        data: { draw: { increment: 1 } }       // draw +1
+      });
+      await prisma.score.update({
+        where: { userId: losingTeamId },
+        data: { draw: { increment: 1 } }       // draw +1
+      });
     }
-
-    // 승리한 팀의 점수 증가
-    await prisma.score.update({
-      where: { userId: winningTeamId },
-      data: { win: { increment: 1 } } /*, points: { increment: 10 } }, // +10점*/,
-    });
-
-    // 패배한 팀의 점수 감소
-    await prisma.score.update({
-      where: { userId: losingTeamId },
-      data: { lose: { increment: 1 } } /*, points: { decrement: 10 } }, // -10점*/,
-    });
   } catch (error) {
     console.error('Error updating team stats:', error);
     throw new Error('팀 통계 업데이트 실패');
@@ -84,10 +77,8 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
 
 // 랜덤 선수 선택 및 승패 결정
 export async function startGame(roster) {
-  const { teamAIds, teamBIds, teamAName, teamBName, teamAId, teamBId } = roster;
-
-  console.log('Team A ID:', teamAId);
-  console.log('Team B ID:', teamBId);
+  const { teamAupgrade, teamBupgrade, teamAIds, teamBIds, teamAName, teamBName, userAid, userBid, isfriendly } =
+    roster;
 
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },
@@ -96,60 +87,89 @@ export async function startGame(roster) {
     where: { playerId: { in: teamBIds } },
   });
 
-  const MAX_SCORE = 3;
+  let count = 5;
   let scoreA = 0;
   let scoreB = 0;
   let draws = 0;
+  let winner = null;
   const gameLog = [];
+  const gameTimes = [];
 
   // 경기가 끝날 때까지 계속 진행
-  while (scoreA < MAX_SCORE && scoreB < MAX_SCORE) {
-    const randomPlayerA = playersA[Math.floor(Math.random() * playersA.length)];
-    const randomPlayerB = playersB[Math.floor(Math.random() * playersB.length)];
+  while (count > 0) {
+    const randomA = Math.floor(Math.random() * teamAIds.length);
+    const randomB = Math.floor(Math.random() * teamBIds.length);
 
-    const playerScoreA = calculateScore(randomPlayerA);
-    const playerScoreB = calculateScore(randomPlayerB);
+    const randomPlayerA = playersA[randomA];
+    const randomPlayerB = playersB[randomB];
 
-    const gameTime = `${Math.floor(Math.random() * 90) + 1}분`;
+    const playerScoreA = calculateScore(randomPlayerA, parseInt(teamAupgrade[randomA]));
+    const playerScoreB = calculateScore(randomPlayerB, parseInt(teamBupgrade[randomB]));
+
+    let gameTime;
+    if (scoreA + scoreB === 0) {
+      gameTime = Math.floor(Math.random() * 11); // 0~10분
+    } else if (scoreA + scoreB === 1) {
+      gameTime = Math.floor(Math.random() * (40 - 10 + 1)) + 10; // 10~40분
+    } else if (scoreA + scoreB === 2) {
+      gameTime = Math.floor(Math.random() * (60 - 40 + 1)) + 40; // 40~60분
+    } else if (scoreA + scoreB === 3) {
+      gameTime = Math.floor(Math.random() * (80 - 60 + 1)) + 60; // 60~80분
+    } else if (scoreA + scoreB === 4) {
+      gameTime = Math.floor(Math.random() * (90 - 80 + 1)) + 80; // 80~90분
+    }
+    gameTimes.push(gameTime); // 시간을 배열에 저장
 
     // 선수 점수 비교
     if (playerScoreA > playerScoreB) {
       scoreA++;
       gameLog.push({
-        gameTime,
+        gameTime: `${gameTime}분`,
         goalTeam: teamAName,
         goalPlayer: randomPlayerA.playerName,
       });
     } else if (playerScoreB > playerScoreA) {
       scoreB++;
       gameLog.push({
-        gameTime,
+        gameTime: `${gameTime}분`,
         goalTeam: teamBName,
         goalPlayer: randomPlayerB.playerName,
       });
     } else {
       draws++;
       gameLog.push({
-        gameTime,
+        gameTime: `${gameTime}분`,
         goalTeam: '무승부',
         goalPlayer: '양 팀 선수 모두가 막상막하네요.',
       });
     }
+    count--;
   }
-
-  // 최종 승리 팀 결정
-  const winner = scoreA === MAX_SCORE ? teamAName : scoreB === MAX_SCORE ? teamBName : null;
+  for (let i = 0; i < gameLog.length; i++) {
+    gameLog[i].gameTime = `${gameTimes[i]}분`;
+  }
+  gameLog.sort((a, b) => {
+    const timeA = parseInt(a.gameTime);
+    const timeB = parseInt(b.gameTime);
+    return timeA - timeB;
+  });
 
   // 게임 결과 반환 및 승패 카운트 업데이트
-  if (winner) {
-    if (scoreA === MAX_SCORE) {
+  if (isfriendly != 1) {
+    if (scoreA > scoreB) {
       // A팀 승리, B팀 패배
-      await updateTeamStats(teamAId, teamBId);
-    } else {
+      winner = teamAName;
+      await updateTeamStats(userAid, userBid, 0);
+    } else if (scoreA < scoreB) {
       // B팀 승리, A팀 패배
-      await updateTeamStats(teamBId, teamAId);
+      winner = teamBName;
+      await updateTeamStats(userBid, userAid, 0);
+    } else {
+      // 무승부
+      await updateTeamStats(userBid, userAid, 1);
     }
-
+  }
+  if (winner != null) {
     return {
       message: `${winner} 팀이 승리했습니다. 축하드립니다!`,
       result: `${teamAName} ${scoreA} - ${scoreB} ${teamBName}`,
@@ -157,12 +177,9 @@ export async function startGame(roster) {
     };
   } else {
     return {
-      message: `경기가 끝났습니다. 무승부입니다.`,
+      message: `무승부로 경기가 끝났습니다.`,
       result: `${teamAName} ${scoreA} - ${scoreB} ${teamBName}`,
       gameLog,
     };
   }
 }
-/*
-// 초기 데이터 삽입 호출
-insertInitialData(1); */

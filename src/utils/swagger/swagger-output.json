@@ -13,6 +13,9 @@
   ],
   "tags": [
     {
+      "name": "Transfer",
+      "description": "이적 시장 API",
+
       "name": "Play",
       "description": "게임 플레이 API",
 
@@ -106,20 +109,37 @@
         }
       }
     },
-    "/api/user": {
+    "/api/user/{userId}": {
       "get": {
         "summary": "유저 정보 조회",
         "tags": ["Users"],
-        "description": "로그인 한 유저 정보 조회 API",
+        "description": "유저 정보 조회 API",
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "유저Id",
+            "in": "path",
+            "example": "1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "유저 정보"
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "404": {
+            "description": "사용자를 찾을 수 없습니다! 다시 검색해주세요."
           }
         }
-      },
+      }
+    },
+    "/api/user": {
       "patch": {
         "summary": "유저 이름 변경",
         "tags": ["Users"],
@@ -397,20 +417,77 @@
         }
       }
     },
-    "/api/playgame": {
+    "/api/friendlymatch/{opponent}": {
       "post": {
-        "summary": "게임 플레이",
+        "summary": "친선 게임 플레이",
         "tags": ["Play"],
-        "description": "게임 플레이할 수 있는 API",
+        "description": "상대를 지정해 게임 플레이할 수 있는 API",
+        "parameters": [
+          {
+            "name": "opponent",
+            "description": "상대유저Id",
+            "in": "path",
+            "example": "1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "팀이 승리했습니다. 축하드립니다!\n\n무승부로 경기가 끝났습니다."
           },
           "400": {
-            "description": "Bad Request"
+            "description": "팀 A는 최소 3명의 선수가 필요합니다. \n\n팀 B는 최소 3명의 선수가 필요합니다."
+          },
+          "401": {
+            "description": "팀 통계 업데이트 실패"
           },
           "404": {
-            "description": "Not Found"
+            "description": "상대를 찾을 수 없습니다."
+          }
+        }
+      }
+    },
+    "/api/playrank": {
+      "post": {
+        "summary": "랭크 게임 플레이",
+        "tags": ["Play"],
+        "description": "매칭시스템을 통해 게임 플레이할 수 있는 API",
+        "responses": {
+          "200": {
+            "description": "팀이 승리했습니다. 축하드립니다!\n\n무승부로 경기가 끝났습니다."
+          },
+          "400": {
+            "description": "팀 A는 최소 3명의 선수가 필요합니다. \n\n팀 B는 최소 3명의 선수가 필요합니다."
+          },
+          "401": {
+            "description": "팀 통계 업데이트 실패"
+          },
+          "404": {
+            "description": "상대를 찾을 수 없습니다."
+          }
+        }
+      }
+    },
+    "/api/transfer/register": {
+      "post": {
+        "summary": "이적시장 등록",
+        "tags": ["Transfer"],
+        "description": "이적시장에 선수를 등록하는 API",
+        "responses": {
+          "201": {
+            "description": "선수이(가) 이적시장에 등록되었습니다."
+          },
+          "400": {
+            "description": "5등급 선수의 등록가격은 최소 ???원 이상이어야 합니다."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "등록되지 않은 선수입니다.\n\n존재하지 않는 선수입니다."
           }
         },
         "requestBody": {
@@ -419,15 +496,94 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "teamAId": {
-                    "example": "any"
+                  "playerId": {
+                    "example": 1
                   },
-                  "teamBId": {
-                    "example": "any"
+                  "price": {
+                    "example": 10000
                   }
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/transfer/purchase": {
+      "patch": {
+        "summary": "이적시장 구매",
+        "tags": ["Transfer"],
+        "description": "이적시장에 등록된 선수를 구매하는 API",
+        "responses": {
+          "200": {
+            "description": "선수이(가) 구매되었습니다."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "이적시장에 등록되지 않은 선수입니다."
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "marketId": {
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transfer/cancel": {
+      "patch": {
+        "summary": "이적시장 취소",
+        "tags": ["Transfer"],
+        "description": "이적시장에 등록된 선수를 취소하는 API",
+        "responses": {
+          "200": {
+            "description": "선수이(가) 등록 취소 되었습니다."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "등록되지 않은 선수입니다."
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "marketId": {
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transfer/list": {
+      "get": {
+        "summary": "이적시장 목록 조회",
+        "tags": ["Transfer"],
+        "description": "이적시장에 등록된 선수목록을 조회하는 API",
+        "responses": {
+          "200": {
+            "description": "이적시장 선수 리스트"
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }

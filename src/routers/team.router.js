@@ -29,39 +29,43 @@ router.get('/userPlayer', authMiddleware, async (req, res, next) => {
 
 /** 보유 선수 상세조회 API **/
 router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
-  const { playerId } = req.params;
-  const { userId } = req.user;
-  const player = await prisma.userPlayer.findFirst({
-    where: {
-      playerId: +playerId,
-      userId: +userId,
-    },
-    select: {
-      playerId: true,
-      upgrade: true,
-      teamId: true,
-      player: {
-        // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        select: {
-          playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
+  try {
+    const { playerId } = req.params;
+    const { userId } = req.user;
+    const player = await prisma.userPlayer.findFirst({
+      where: {
+        playerId: +playerId,
+        userId: +userId,
+      },
+      select: {
+        playerId: true,
+        upgrade: true,
+        teamId: true,
+        player: {
+          // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
+          select: {
+            playerName: true,
+            rare: true,
+            speed: true,
+            finishing: true,
+            pass: true,
+            defense: true,
+            stamina: true,
+          },
         },
       },
-    },
-  });
-  if (player.upgrade > 0) {
-    player.player.speed = player.player.speed + player.upgrade;
-    player.player.finishing = player.player.finishing + player.upgrade;
-    player.player.pass = player.player.pass + player.upgrade;
-    player.player.defense = player.player.defense + player.upgrade;
-    player.player.stamina = player.player.stamina + player.upgrade;
+    });
+    if (player.upgrade > 0) {
+      player.player.speed = player.player.speed + player.upgrade;
+      player.player.finishing = player.player.finishing + player.upgrade;
+      player.player.pass = player.player.pass + player.upgrade;
+      player.player.defense = player.player.defense + player.upgrade;
+      player.player.stamina = player.player.stamina + player.upgrade;
+    }
+    return res.status(200).json({ data: player });
+  } catch (err) {
+    next(err);
   }
-  return res.status(200).json({ data: player });
 });
 
 /** 로스터 조회 API **/
@@ -93,9 +97,7 @@ router.put('/roster', authMiddleware, async (req, res, next) => {
     let playerIds = [...set];
 
     if (playerIds.length != 3)
-      return res
-        .status(401)
-        .json({ message: '로스터는 중복되지 않는 3명을 지정해야합니다.' });
+      return res.status(401).json({ message: '로스터는 중복되지 않는 3명을 지정해야합니다.' });
 
     const result = await prisma.$transaction(async (tx) => {
       const teaminit = await tx.userPlayer.updateMany({
@@ -289,16 +291,12 @@ router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
 
     // 해당 선수가 없는 경우
     if (!userPlayer) {
-      return res
-        .status(404)
-        .json({ error: '해당 선수를 보유하고 있지 않습니다.' });
+      return res.status(404).json({ error: '해당 선수를 보유하고 있지 않습니다.' });
     }
 
     // 이미 최대 강화(10강)인 경우
     if (userPlayer.upgrade >= 10) {
-      return res
-        .status(400)
-        .json({ error: '이미 최대 강화에 도달하였습니다.' });
+      return res.status(400).json({ error: '이미 최대 강화에 도달하였습니다.' });
     }
 
     const requiredCount = userPlayer.upgrade + 1; // 강화에 필요한 카드 수 = 강화치 + 1

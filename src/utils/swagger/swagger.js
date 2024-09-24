@@ -36,6 +36,7 @@ const routes = [
     'src/routers/ranking.router.js',
     'src/routers/player.router.js',
     'src/routers/game.router.js',
+    'src/routers/transfer.router.js',
 ];
 
 

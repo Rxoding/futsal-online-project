@@ -35,9 +35,18 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
         email,
       },
     });
+    const isExistName = await prisma.user.findFirst({
+      where: {
+        name,
+      },
+    });
 
     if (isExistAccount) {
       return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+    }
+
+    if (isExistName) {
+      return res.status(409).json({ message: '이미 존재하는 이름입니다.' });
     }
 
     // password 암호화
@@ -50,23 +59,23 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
     const [account, user, score] = await prisma.$transaction(
       async (tx) => {
         // account 생성
-        const account = await prisma.account.create({
+        const account = await tx.account.create({
           data: {
             email,
             password: hashedPassword,
           },
         });
         // user 생성
-        const user = await prisma.user.create({
+        const user = await tx.user.create({
           data: {
             accountId: account.accountId,
             name: useName,
-            cash: 1000,
+            cash: 10000,
             userScore: 1000,
           },
         });
         // score 생성
-        const score = await prisma.score.create({
+        const score = await tx.score.create({
           data: {
             userId: user.userId,
             win: 0,
@@ -139,11 +148,10 @@ router.get('/user/:userId', authMiddleware, async (req, res, next) => {
         },
       },
 
-      ...( requestingUserId === +userId && {
+      ...(requestingUserId === +userId && {
         cash: true,
         guarantee: true,
       }),
-
     },
   });
 
@@ -153,7 +161,6 @@ router.get('/user/:userId', authMiddleware, async (req, res, next) => {
 
   return res.status(200).json({ data: user });
 });
-
 
 // 유저 이름 변경 API
 router.patch('/user', authMiddleware, async (req, res, next) => {
