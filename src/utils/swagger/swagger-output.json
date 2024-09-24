@@ -106,20 +106,63 @@
         }
       }
     },
-    "/api/user": {
+    "/user/{userId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/user/{userId}": {
       "get": {
         "summary": "유저 정보 조회",
         "tags": ["Users"],
         "description": "로그인 한 유저 정보 조회 API",
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "유저Id",
+            "in": "path",
+            "example": "1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "유저 정보"
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "404": {
+            "description": "사용자를 찾을 수 없습니다! 다시 검색해주세요."
           }
         }
-      },
+      }
+    },
+    "/api/user": {
       "patch": {
         "summary": "유저 이름 변경",
         "tags": ["Users"],
