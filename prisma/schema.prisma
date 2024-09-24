@@ -61,7 +61,7 @@ model UserPlayer {
   userId      Int       @map("userId")
   playerId    Int       @map("playerId")
   upgrade     Int       @default(0) @map("upgrade")
-  teamId      Int?       @map("teamId")
+  teamId      Int?      @map("teamId")
   count       Int       @default(0) @map("count")
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
