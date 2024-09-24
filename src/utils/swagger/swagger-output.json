@@ -136,7 +136,7 @@
       "get": {
         "summary": "유저 정보 조회",
         "tags": ["Users"],
-        "description": "로그인 한 유저 정보 조회 API",
+        "description": "유저 정보 조회 API",
         "parameters": [
           {
             "name": "userId",
