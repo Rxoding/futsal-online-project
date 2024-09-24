@@ -17,8 +17,8 @@ const signUpValidator = async (req, res, next) => {
   } catch (error) {
     const key = error.details[0].context.key;
     const type = error.details[0].type;
-    console.log(key);
-    console.log(type);
+    console.log('key=>', key);
+    console.log('type=>', type);
     if (error) {
       if (key === 'email') {
         if (type === 'any.required') {
@@ -33,12 +33,10 @@ const signUpValidator = async (req, res, next) => {
           return res.status(400).json({ message: '비밀번호는 최소 6자리 이상이어야 합니다.' });
         }
       } else if (key === 'name') {
-        if (type === 'any.required') {
-          return res.status(400).json({ message: '구단주 명은 필수 항목입니다.' });
-        } else if (type === 'string.pattern.base') {
+        if (type === 'string.pattern.base') {
           return res
             .status(400)
-            .json({ message: '영문자(대소문자), 숫자, 그리고 한글만 포함되어야 합니다.' });
+            .json({ message: '이름은 영문자(대소문자), 숫자, 그리고 한글만 포함되어야 합니다.' });
         }
       }
       return res.status(400).json({ message: error.details[0].message });

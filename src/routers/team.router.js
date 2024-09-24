@@ -400,47 +400,4 @@ router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
   }
 });
 
-// 카드 판매 API (count 소모)
-router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
-  const { playerId } = req.params;
-  const { userId } = req.user;
-  try {
-    // 유저 정보 가져오기
-    const user = await prisma.user.findFirst({
-      where: { userId: +userId },
-    });
-    const userPlayer = await prisma.userPlayer.findFirst({
-      where: {
-        userId: +userId,
-        playerId: +playerId,
-      },
-    });
-    const Player = await prisma.Player.findFirst({
-      where: {
-        playerId: +playerId,
-      },
-    });
-    // 존재하지 않는 선수일 경우 에러
-    if (!userPlayer) {
-      return res.status(401).json({ error: '존재하지 않는 선수입니다.' });
-    }
-    // 판매할 수 있는 카드가 없으면 에러
-    if (userPlayer.count < 1) {
-      return res.status(401).json({ error: '판매할 수 있는 카드가 없습니다.' });
-    }
-
-    // 판매한 선수의 레어도에 따라 유저에게 캐쉬 지급
-    const rare = Player.rare;
-    const pricePerRare = [1000, 800, 200, 100, 50];
-    const curCash = user.cash + pricePerRare[rare - 1];
-    console.log(user.cash);
-    await prisma.user.update({
-      where: { userId: +userId },
-      data: { cash: curCash },
-    });
-    return res.status(200).json({ message: `카드 판매 완료! (cash + ${pricePerRare[rare - 1]})` });
-  } catch (err) {
-    next(err);
-  }
-});
 export default router;

@@ -35,6 +35,7 @@ model User {
   account Account @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
   userPlayer UserPlayer[]
   score Score?
+  transfer TransferMarket[] @relation("UserTransferMarket")
 
   @@map("User")
 
@@ -61,7 +62,7 @@ model UserPlayer {
   userId      Int       @map("userId")
   playerId    Int       @map("playerId")
   upgrade     Int       @default(0) @map("upgrade")
-  teamId      Int?       @map("teamId")
+  teamId      Int?      @map("teamId")
   count       Int       @default(0) @map("count")
   createdAt   DateTime  @default(now()) @map("createdAt")
   updatedAt   DateTime  @updatedAt @map("updatedAt")
@@ -86,7 +87,22 @@ model Player {
   updatedAt   DateTime  @updatedAt @map("updatedAt")
   
   userPlayer UserPlayer[]
+  transfer TransferMarket[] @relation("PlayerTransferMarket")
 
   @@map("Player")
 
+}
+
+// 이적시장 테이블
+model TransferMarket {
+  marketId     Int       @id @default(autoincrement()) @map("marketId")
+  sellerId     Int       @map("sellerId")
+  playerId     Int       @map("playerId")  // 판매되는 선수 (Player)
+  price        Int       @map("price")     // 선수의 판매 가격
+  createdAt    DateTime  @default(now()) @map("createdAt")
+  updatedAt    DateTime  @updatedAt @map("updatedAt")
+
+  seller User @relation("UserTransferMarket",fields: [sellerId], references: [userId], onDelete: Cascade)
+  player Player @relation("PlayerTransferMarket",fields: [playerId], references: [playerId], onDelete: Cascade)
+  @@map("TransferMarket")
 }
