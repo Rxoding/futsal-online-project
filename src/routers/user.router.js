@@ -112,15 +112,15 @@ router.post('/sign-in', signInValidator, async (req, res, next) => {
 });
 
 // -- 유저 정보 조회 API -- //
-router.get('/user', authMiddleware, async (req, res, next) => {
-  const { userId } = req.user;
+router.get('/user/:userId', authMiddleware, async (req, res, next) => {
+  const { userId: requestingUserId } = req.user;
+  const { userId } = req.params;
 
   const user = await prisma.user.findFirst({
     where: { userId: +userId },
     select: {
       name: true,
       userScore: true,
-      cash: true,
 
       score: {
         select: {
@@ -129,8 +129,18 @@ router.get('/user', authMiddleware, async (req, res, next) => {
           draw: true,
         },
       },
+
+      ...( requestingUserId === +userId && {
+        cash: true,
+        guarantee: true,
+      }),
+
     },
   });
+
+  if (!user) {
+    return res.status(404).json({ error: '사용자를 찾을 수 없습니다! 다시 검색해주세요.' });
+  }
 
   return res.status(200).json({ data: user });
 });
