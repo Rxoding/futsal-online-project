@@ -32,7 +32,7 @@ async function insertInitialData(userId) {
           win: 0,
           lose: 0,
           draw: 0,
-          points: 1000, // 기본 점수 1000
+          // points: 1000, // 기본 점수 1000
         },
       });
       console.log('초기 데이터가 삽입되었습니다. userId:', userId);
@@ -68,13 +68,13 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
     // 승리한 팀의 점수 증가
     await prisma.score.update({
       where: { userId: winningTeamId },
-      data: { win: { increment: 1 }, points: { increment: 10 } }, // +10점
+      data: { win: { increment: 1 } }, //points: { increment: 10 } }, // +10점
     });
 
     // 패배한 팀의 점수 감소
     await prisma.score.update({
       where: { userId: losingTeamId },
-      data: { lose: { increment: 1 }, points: { decrement: 10 } }, // -10점
+      data: { lose: { increment: 1 } }, //points: { decrement: 10 } }, // -10점
     });
   } catch (error) {
     console.error('Error updating team stats:', error);
