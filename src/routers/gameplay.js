@@ -17,7 +17,7 @@ export function calculateScore(player) {
     player.stamina * weights.stamina
   );
 }
-
+/*
 // 데이터 삽입 함수
 async function insertInitialData(userId) {
   try {
@@ -43,7 +43,7 @@ async function insertInitialData(userId) {
     console.error('데이터 삽입 오류:', error);
   }
 }
-
+*/
 // 승리 및 패배 카운트 업데이트 함수
 async function updateTeamStats(winningTeamId, losingTeamId) {
   console.log(
@@ -165,4 +165,4 @@ export async function startGame(roster) {
 }
 
 // 초기 데이터 삽입 호출
-insertInitialData(1); // 기본 사용자 ID를 필요에 맞게 변경하세요.
+//insertInitialData(1);
