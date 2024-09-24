@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma/index.js';
 
 // 팀 점수 계산 함수
-export function calculateScore(player) {
+export function calculateScore(player, upgrade) {
   const weights = {
     speed: 0.1,
     finishing: 0.25,
@@ -10,45 +10,17 @@ export function calculateScore(player) {
     stamina: 0.2,
   };
   return (
-    player.speed * weights.speed +
-    player.finishing * weights.finishing +
-    player.pass * weights.pass +
-    player.defense * weights.defense +
-    player.stamina * weights.stamina
+    (player.speed + upgrade) * weights.speed +
+    (player.finishing + upgrade) * weights.finishing +
+    (player.pass + upgrade) * weights.pass +
+    (player.defense + upgrade) * weights.defense +
+    (player.stamina + upgrade) * weights.stamina
   );
 }
-/*
-// 데이터 삽입 함수
-async function insertInitialData(userId) {
-  try {
-    const existingScore = await prisma.score.findUnique({
-      where: { userId },
-    });
 
-    if (!existingScore) {
-      await prisma.score.create({
-        data: {
-          userId,
-          win: 0,
-          lose: 0,
-          draw: 0,
-          //points: 1000, // 기본 점수 1000
-        },
-      });
-      console.log('초기 데이터가 삽입되었습니다. userId:', userId);
-    } else {
-      console.log('해당 userId의 데이터가 이미 존재합니다.');
-    }
-  } catch (error) {
-    console.error('데이터 삽입 오류:', error);
-  }
-}
-*/
 // 승리 및 패배 카운트 업데이트 함수
 async function updateTeamStats(winningTeamId, losingTeamId) {
-  console.log(
-    `Updating stats for Winning Team ID: ${winningTeamId}, Losing Team ID: ${losingTeamId}`,
-  );
+  console.log(`통계 업데이트 중 우승 팀 ID : ${winningTeamId}, 패배 팀 ID: ${losingTeamId}`);
 
   try {
     // 승리한 팀의 현재 점수 가져오기
@@ -84,10 +56,8 @@ async function updateTeamStats(winningTeamId, losingTeamId) {
 
 // 랜덤 선수 선택 및 승패 결정
 export async function startGame(roster) {
-  const { teamAIds, teamBIds, teamAName, teamBName, teamAId, teamBId } = roster;
-
-  console.log('Team A ID:', teamAId);
-  console.log('Team B ID:', teamBId);
+  const { teamAupgrade, teamBupgrade, teamAIds, teamBIds, teamAName, teamBName, isfriendly } =
+    roster;
 
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },
@@ -105,11 +75,14 @@ export async function startGame(roster) {
 
   // 경기가 끝날 때까지 계속 진행
   while (scoreA < MAX_SCORE && scoreB < MAX_SCORE) {
-    const randomPlayerA = playersA[Math.floor(Math.random() * playersA.length)];
-    const randomPlayerB = playersB[Math.floor(Math.random() * playersB.length)];
+    const randomA = Math.floor(Math.random() * teamAIds.length);
+    const randomB = Math.floor(Math.random() * teamBIds.length);
 
-    const playerScoreA = calculateScore(randomPlayerA);
-    const playerScoreB = calculateScore(randomPlayerB);
+    const randomPlayerA = playersA[randomA];
+    const randomPlayerB = playersB[randomB];
+
+    const playerScoreA = calculateScore(randomPlayerA, parseInt(teamAupgrade[randomA]));
+    const playerScoreB = calculateScore(randomPlayerB, parseInt(teamBupgrade[randomB]));
 
     let gameTime;
     if (scoreA + scoreB === 0) {
@@ -157,17 +130,20 @@ export async function startGame(roster) {
     const timeB = parseInt(b.gameTime);
     return timeA - timeB;
   });
+
   // 최종 승리 팀 결정
   const winner = scoreA === MAX_SCORE ? teamAName : scoreB === MAX_SCORE ? teamBName : null;
 
   // 게임 결과 반환 및 승패 카운트 업데이트
   if (winner) {
-    if (scoreA === MAX_SCORE) {
-      // A팀 승리, B팀 패배
-      await updateTeamStats(teamAId, teamBId);
-    } else {
-      // B팀 승리, A팀 패배
-      await updateTeamStats(teamBId, teamAId);
+    if (isfriendly != 1) {
+      if (scoreA === MAX_SCORE) {
+        // A팀 승리, B팀 패배
+        await updateTeamStats(teamAIds[0], teamBIds[0]);
+      } else {
+        // B팀 승리, A팀 패배
+        await updateTeamStats(teamBIds[0], teamAIds[0]);
+      }
     }
 
     return {
@@ -177,12 +153,9 @@ export async function startGame(roster) {
     };
   } else {
     return {
-      message: `경기가 끝났습니다. 무승부입니다.`,
+      message: `경기가 끝났습니다.`,
       result: `${teamAName} ${scoreA} - ${scoreB} ${teamBName}`,
       gameLog,
     };
   }
 }
-
-// 초기 데이터 삽입 호출
-/*insertInitialData(1); */
