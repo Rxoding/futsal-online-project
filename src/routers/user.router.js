@@ -2,26 +2,18 @@ import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import authMiddleware from '../middleWares/auth.middleWare.js';
+import authMiddleware from '../middlewares/auth.middleWare.js';
 import jwtSecretKey from '../utils/jwtSecretKey.js';
 
 const router = express.Router();
 
 // 랜덤 이름 생성 함수
 function generateRandomName() {
-  const adjectives = [
-    '상큼한',
-    '달콤한',
-    '시원한',
-    '기분좋은',
-    '매혹적인',
-    '차가운',
-  ];
+  const adjectives = ['상큼한', '달콤한', '시원한', '기분좋은', '매혹적인', '차가운'];
   const nouns = ['레몬', '쿠키', '딸기', '바닐라', '초코', '잼', '사과'];
 
   // 랜덤하게 선택
-  const randomAdjective =
-    adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
   const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
 
   // 조합하여 반환
@@ -91,7 +83,7 @@ router.post('/sign-in', async (req, res, next) => {
       userId: user.userId,
     },
     jwtSecretKey(),
-    console.log(process.env.SESSION_SECRET_KEY)
+    console.log(process.env.SESSION_SECRET_KEY),
   );
 
   // authotization JWT 저장
@@ -137,9 +129,7 @@ router.put('/user/chargeCash', authMiddleware, async (req, res, next) => {
         },
       },
     });
-    return res
-      .status(200)
-      .json(`${cash}원을 충전하였습니다. 캐시 총액: ${chargeCash.cash}`);
+    return res.status(200).json(`${cash}원을 충전하였습니다. 캐시 총액: ${chargeCash.cash}`);
   } catch (err) {
     next(err);
   }

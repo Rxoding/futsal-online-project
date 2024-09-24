@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { startGame } from './gameplay.js'; // 게임 로직이 들어있는 서비스 파일
 import { prisma } from '../utils/prisma/index.js';
-import authMiddleware from '../middleWares/auth.middleWare.js';
+import authMiddleware from '../middlewares/auth.middleWare.js';
 
 const router = Router();
 
