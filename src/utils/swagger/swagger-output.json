@@ -522,7 +522,7 @@
             "description": "Unauthorized"
           },
           "404": {
-            "description": "이적시장에 등록되지 않은 선수입니다."
+            "description": "이적시장에 등록되지 않은 선수입니다.\n\n자신이 등록한 선수는 구매할 수 없습니다."
           }
         },
         "requestBody": {
