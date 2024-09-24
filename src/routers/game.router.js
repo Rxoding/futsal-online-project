@@ -22,7 +22,6 @@ router.post('/playgame', authMiddleware, async (req, res, next) => {
     const { accountId } = user;
 
     // 로스터 조회
-
     const rosterA = await prisma.userPlayer.findMany({
       where: { teamId: teamAId, userId: userId },
       select: { playerId: true },
