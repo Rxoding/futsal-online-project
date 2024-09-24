@@ -9,6 +9,7 @@ import teamRouter from './routers/team.router.js';
 import userRouter from './routers/user.router.js';
 import swaggerFile from './utils/swagger/swagger-output.json' assert { type: 'json' };
 import swaggerUi from 'swagger-ui-express';
+import transperRouter from './routers/transfer.router.js';
 import ErrorHandlingMiddleware from './middlewares/error-handling.middleware.js';
 import dotenv from 'dotenv';
 
@@ -20,10 +21,10 @@ const PORT = 3029;
 app.use(LogMiddleware);
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter]);
+app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter, transperRouter]);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile, { explorer: true }));
 app.use(ErrorHandlingMiddleware);
 
 app.listen(PORT, () => {
-    console.log(PORT, '포트로 서버가 열렸어요!');
+  console.log(PORT, '포트로 서버가 열렸어요!');
 });
