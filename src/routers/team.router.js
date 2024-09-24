@@ -4,46 +4,6 @@ import authMiddleware from '../middlewares/auth/auth.middleware.js';
 
 const router = express.Router();
 
-/** 테스트용 선수 추가 API **/
-router.post('/test', authMiddleware, async (req, res, next) => {
-  try {
-    const { playerId } = req.body;
-    const { userId } = req.user;
-    const isExistplayercode = await prisma.userPlayer.findFirst({
-      where: {
-        userId: userId,
-        playerId,
-      },
-    });
-    // 선수를 가지고 있다면 선수의 count를 증가시킵니다.
-    if (isExistplayercode) {
-      const count = await prisma.userPlayer.update({
-        where: {
-          Id: isExistplayercode.Id,
-          playerId,
-        },
-        data: {
-          count: isExistplayercode.count + 1,
-        },
-      });
-    } else {
-      // 선수를 가지고 있지 않다면 userPlayer 테이블에 선수를 생성합니다.
-      const player = await prisma.userPlayer.create({
-        data: {
-          userId: +userId,
-          playerId: playerId,
-        },
-      });
-    }
-
-    return res.status(201).json({
-      message: playerId + '이 팀에 추가되었습니다.',
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
 /** 보유 선수 조회 API **/
 router.get('/userPlayer', authMiddleware, async (req, res, next) => {
   const { userId } = req.user;
@@ -57,15 +17,8 @@ router.get('/userPlayer', authMiddleware, async (req, res, next) => {
       count: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
         },
       },
     },
@@ -89,7 +42,6 @@ router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
       teamId: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
           rare: true,
@@ -102,7 +54,13 @@ router.get('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
       },
     },
   });
-
+  if (player.upgrade > 0) {
+    player.player.speed = player.player.speed + player.upgrade;
+    player.player.finishing = player.player.finishing + player.upgrade;
+    player.player.pass = player.player.pass + player.upgrade;
+    player.player.defense = player.player.defense + player.upgrade;
+    player.player.stamina = player.player.stamina + player.upgrade;
+  }
   return res.status(200).json({ data: player });
 });
 
@@ -116,15 +74,8 @@ router.get('/roster', authMiddleware, async (req, res, next) => {
       upgrade: true,
       player: {
         // 1:1 관계를 맺고있는 Player 테이블을 조회합니다.
-        // todo upgrade에 따른 스탯 상승 보여줘야함
         select: {
           playerName: true,
-          rare: true,
-          speed: true,
-          finishing: true,
-          pass: true,
-          defense: true,
-          stamina: true,
         },
       },
     },
