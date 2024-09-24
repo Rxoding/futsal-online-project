@@ -7,6 +7,8 @@ import PlayerRouter from './routers/player.router.js';
 import gameRouter from './routers/game.router.js';
 import teamRouter from './routers/team.router.js';
 import userRouter from './routers/user.router.js';
+import swaggerFile from './utils/swagger/swagger-output.json' assert { type: 'json' };
+import swaggerUi from 'swagger-ui-express';
 import transperRouter from './routers/transfer.router.js';
 import ErrorHandlingMiddleware from './middlewares/error-handling.middleware.js';
 import dotenv from 'dotenv';
@@ -19,7 +21,7 @@ const PORT = 3029;
 app.use(LogMiddleware);
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter, transperRouter]);
+app.use('/api', [userRouter, teamRouter, PlayerRouter, gameRouter, rankingRouter]);
 app.use(ErrorHandlingMiddleware);
 
 app.listen(PORT, () => {

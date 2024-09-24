@@ -56,7 +56,7 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
     const useName = name || generateRandomName();
 
     // 트랜잭션 사용
-    const [account, user] = await prisma.$transaction(
+    const [account, user, score] = await prisma.$transaction(
       async (tx) => {
         // account 생성
         const account = await tx.account.create({
@@ -74,7 +74,16 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
             userScore: 1000,
           },
         });
-        return [account, user];
+        // score 생성
+        const score = await prisma.score.create({
+          data: {
+            userId: user.userId,
+            win: 0,
+            lose: 0,
+            draw: 0,
+          },
+        });
+        return [account, user, score];
       },
       {
         //트랜잭션 격리수준 설정
@@ -121,15 +130,15 @@ router.post('/sign-in', signInValidator, async (req, res, next) => {
 });
 
 // -- 유저 정보 조회 API -- //
-router.get('/user', authMiddleware, async (req, res, next) => {
-  const { userId } = req.user;
+router.get('/user/:userId', authMiddleware, async (req, res, next) => {
+  const { userId: requestingUserId } = req.user;
+  const { userId } = req.params;
 
   const user = await prisma.user.findFirst({
     where: { userId: +userId },
     select: {
       name: true,
       userScore: true,
-      cash: true,
 
       score: {
         select: {
@@ -138,11 +147,22 @@ router.get('/user', authMiddleware, async (req, res, next) => {
           draw: true,
         },
       },
+
+      ...( requestingUserId === +userId && {
+        cash: true,
+        guarantee: true,
+      }),
+
     },
   });
 
+  if (!user) {
+    return res.status(404).json({ error: '사용자를 찾을 수 없습니다! 다시 검색해주세요.' });
+  }
+
   return res.status(200).json({ data: user });
 });
+
 
 // 유저 이름 변경 API
 router.patch('/user', authMiddleware, async (req, res, next) => {
