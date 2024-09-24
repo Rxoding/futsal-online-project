@@ -152,7 +152,6 @@ router.get('/user/:userId', authMiddleware, async (req, res, next) => {
         cash: true,
         guarantee: true,
       }),
-
     },
   });
 
@@ -162,7 +161,6 @@ router.get('/user/:userId', authMiddleware, async (req, res, next) => {
 
   return res.status(200).json({ data: user });
 });
-
 
 // 유저 이름 변경 API
 router.patch('/user', authMiddleware, async (req, res, next) => {

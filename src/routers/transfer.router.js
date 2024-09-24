@@ -120,6 +120,7 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
       },
       select: {
         playerId: true,
+        sellerId: true,
       },
     });
 
@@ -148,6 +149,12 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
     if (!player) {
       return res.status(404).json({ error: '등록되지 않은 선수입니다.' });
     }
+
+    // 자기가 올린 선수는 구매할수 없게
+    if (userId === transferMarket.sellerId) {
+      return res.status(404).json({ error: '자신이 등록한 선수는 구매할 수 없습니다.' });
+    }
+
     const [transferUpdate, purchasePlayer] = await prisma.$transaction(async (tx) => {
       // 이적시장 업데이트 (삭제)
       const transferUpdate = await tx.transferMarket.delete({
