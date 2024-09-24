@@ -106,32 +106,6 @@
         }
       }
     },
-    "/user/{userId}": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
     "/api/user/{userId}": {
       "get": {
         "summary": "유저 정보 조회",
@@ -440,37 +414,56 @@
         }
       }
     },
-    "/api/playgame": {
+    "/api/friendlymatch/{opponent}": {
       "post": {
-        "summary": "게임 플레이",
+        "summary": "친선 게임 플레이",
         "tags": ["Play"],
-        "description": "게임 플레이할 수 있는 API",
+        "description": "상대를 지정해 게임 플레이할 수 있는 API",
+        "parameters": [
+          {
+            "name": "opponent",
+            "description": "상대유저Id",
+            "in": "path",
+            "example": "1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "팀이 승리했습니다. 축하드립니다!\n\n무승부로 경기가 끝났습니다."
           },
           "400": {
-            "description": "Bad Request"
+            "description": "팀 A는 최소 3명의 선수가 필요합니다. \n\n팀 B는 최소 3명의 선수가 필요합니다."
+          },
+          "401": {
+            "description": "팀 통계 업데이트 실패"
           },
           "404": {
-            "description": "Not Found"
+            "description": "상대를 찾을 수 없습니다."
           }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "teamAId": {
-                    "example": "any"
-                  },
-                  "teamBId": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
+        }
+      }
+    },
+    "/api/playrank": {
+      "post": {
+        "summary": "랭크 게임 플레이",
+        "tags": ["Play"],
+        "description": "매칭시스템을 통해 게임 플레이할 수 있는 API",
+        "responses": {
+          "200": {
+            "description": "팀이 승리했습니다. 축하드립니다!\n\n무승부로 경기가 끝났습니다."
+          },
+          "400": {
+            "description": "팀 A는 최소 3명의 선수가 필요합니다. \n\n팀 B는 최소 3명의 선수가 필요합니다."
+          },
+          "401": {
+            "description": "팀 통계 업데이트 실패"
+          },
+          "404": {
+            "description": "상대를 찾을 수 없습니다."
           }
         }
       }
