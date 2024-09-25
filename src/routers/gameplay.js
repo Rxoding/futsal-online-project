@@ -80,8 +80,38 @@ async function updateTeamStats(winningTeamId, losingTeamId, drawCount, isfriendl
 
 // 랜덤 선수 선택 및 승패 결정
 export async function startGame(roster) {
-  const { teamAupgrade, teamBupgrade, teamAIds, teamBIds, teamAName, teamBName, userAid, userBid, isfriendly } =
-    roster;
+  const { userAid, userBid, teamAName, teamBName, isfriendly } = roster;
+
+  // 로스터 조회
+  const rosterA = await prisma.userPlayer.findMany({
+    where: { userId: +userAid, teamId: 1 },
+    select: {
+      playerId: true,
+      upgrade: true,
+    },
+  });
+  console.log('로스터 A:', rosterA);
+  const rosterB = await prisma.userPlayer.findMany({
+    where: { userId: +userBid, teamId: 1 },
+    select: {
+      playerId: true,
+      upgrade: true,
+    },
+  });
+  console.log('로스터 B:', rosterB);
+
+  // 로스터 유효성 검사
+  if (rosterA.length < 3) {
+    return res.status(400).json({ message: '팀 A는 최소 3명의 선수가 필요합니다.' });
+  }
+  if (rosterB.length < 3) {
+    return res.status(400).json({ message: '팀 B는 최소 3명의 선수가 필요합니다.' });
+  }
+
+  const teamAIds = rosterA.map((player) => player.playerId);
+  const teamBIds = rosterB.map((player) => player.playerId);
+  const teamAupgrade = rosterA.map((player) => player.upgrade);
+  const teamBupgrade = rosterB.map((player) => player.upgrade);
 
   const playersA = await prisma.player.findMany({
     where: { playerId: { in: teamAIds } },

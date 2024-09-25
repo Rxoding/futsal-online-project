@@ -125,7 +125,6 @@ router.post('/sign-in', signInValidator, async (req, res, next) => {
       userId: user.userId,
     },
     jwtSecretKey(),
-    console.log(process.env.SESSION_SECRET_KEY),
   );
 
   // authotization JWT 저장
