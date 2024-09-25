@@ -19,7 +19,7 @@ export function calculateScore(player, upgrade) {
 }
 
 // 승리 및 패배 카운트 업데이트 함수
-async function updateTeamStats(winningTeamId, losingTeamId, drawCount) {
+async function updateTeamStats(winningTeamId, losingTeamId, drawCount, isfriendly) {
   try {
     // draw가 아닐때
     if (drawCount == 0) {
@@ -39,21 +39,24 @@ async function updateTeamStats(winningTeamId, losingTeamId, drawCount) {
         throw new Error(`팀의 점수를 찾을 수 없습니다.`);
       }
 
-      // 승리한 팀의 점수 증가
-      await prisma.user.update({
-        where: { userId: winningTeamId },
-        data: { userScore: { increment: 10 } } // +10점
-      });
+      if (isfriendly != 1) {
+        // 승리한 팀의 점수 증가
+        await prisma.user.update({
+          where: { userId: winningTeamId },
+          data: { userScore: { increment: 10 } } // +10점
+        });
+        // 패배한 팀의 점수 감소
+        await prisma.user.update({
+          where: { userId: losingTeamId },
+          data: { userScore: { decrement: 10 } } // -10점
+        });
+      }
+      // 승리한 팀 win 카운트
       await prisma.score.update({
         where: { userId: winningTeamId },
         data: { win: { increment: 1 } }       // win +1
       });
-
-      // 패배한 팀의 점수 감소
-      await prisma.user.update({
-        where: { userId: losingTeamId },
-        data: { userScore: { decrement: 10 } } // -10점
-      });
+      // 패배한 팀 lose 카운트
       await prisma.score.update({
         where: { userId: losingTeamId },
         data: { lose: { increment: 1 } } // lose +1 
@@ -155,20 +158,19 @@ export async function startGame(roster) {
   });
 
   // 게임 결과 반환 및 승패 카운트 업데이트
-  if (isfriendly != 1) {
-    if (scoreA > scoreB) {
-      // A팀 승리, B팀 패배
-      winner = teamAName;
-      await updateTeamStats(userAid, userBid, 0);
-    } else if (scoreA < scoreB) {
-      // B팀 승리, A팀 패배
-      winner = teamBName;
-      await updateTeamStats(userBid, userAid, 0);
-    } else {
-      // 무승부
-      await updateTeamStats(userBid, userAid, 1);
-    }
+  if (scoreA > scoreB) {
+    // A팀 승리, B팀 패배
+    winner = teamAName;
+    await updateTeamStats(userAid, userBid, 0, isfriendly);
+  } else if (scoreA < scoreB) {
+    // B팀 승리, A팀 패배
+    winner = teamBName;
+    await updateTeamStats(userBid, userAid, 0, isfriendly);
+  } else {
+    // 무승부
+    await updateTeamStats(userBid, userAid, 1, isfriendly);
   }
+
   if (winner != null) {
     return {
       message: `${winner} 팀이 승리했습니다. 축하드립니다!`,

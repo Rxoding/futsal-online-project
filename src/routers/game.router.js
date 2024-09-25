@@ -15,13 +15,13 @@ router.post('/friendlymatch/:opponent', authMiddleware, async (req, res, next) =
     // 상대 정보 조회
     const my = await prisma.user.findUnique({
       where: { userId: +userId },
-      select: { accountId: true, name: true },
+      select: { accountId: true, userId: true, name: true },
     });
 
     // 상대 정보 조회
     const user = await prisma.user.findUnique({
       where: { userId: +opponent },
-      select: { accountId: true, name: true },
+      select: { accountId: true, userId: true, name: true },
     });
     if (!user) {
       return res.status(404).json({ message: '상대를 찾을 수 없습니다.' });
@@ -37,7 +37,7 @@ router.post('/friendlymatch/:opponent', authMiddleware, async (req, res, next) =
     });
     console.log('로스터 A:', rosterA);
     const rosterB = await prisma.userPlayer.findMany({
-      where: { userId: +opponent },
+      where: { userId: +opponent, teamId: 1 },
       select: {
         playerId: true,
         upgrade: true,
@@ -60,6 +60,8 @@ router.post('/friendlymatch/:opponent', authMiddleware, async (req, res, next) =
     const upgradesB = rosterB.map((player) => player.upgrade);
     const teamAName = my.name + '의 팀'; // 사용자 이름을 팀 A 이름으로 사용s
     const teamBName = user.name + '의 팀'; // 사용자 이름을 팀 B 이름으로 사용
+    const userAid = my.userId;
+    const userBid = user.userId;
     const isfriendly = 1;
 
     const result = await startGame({
@@ -69,6 +71,8 @@ router.post('/friendlymatch/:opponent', authMiddleware, async (req, res, next) =
       teamBIds: playerIdsB,
       teamAName, // 사용자 이름 기반의 팀 A 이름
       teamBName, // 사용자 이름 기반의 팀 B 이름
+      userAid,
+      userBid,
       isfriendly,
     });
     // 결과 반환
