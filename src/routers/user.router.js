@@ -91,7 +91,11 @@ router.post('/sign-up', signUpValidator, async (req, res, next) => {
       },
     );
 
-    return res.status(201).json({ message: '회원가입이 완료되었습니다.' });
+    return res
+      .status(201)
+      .json({
+        message: `${user.name}님 회원가입이 완료되었습니다. userID는 ${user.userId} 입니다.`,
+      });
   } catch (err) {
     next(err);
   }
