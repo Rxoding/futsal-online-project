@@ -113,6 +113,14 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
   const { marketId } = req.body;
   const { userId } = req.user;
   try {
+    // 유저 정보 가져오기
+    const user = await prisma.user.findFirst({
+      where: { userId: +userId },
+      select: {
+        cash: true,
+      },
+    });
+
     // marketId에 따른 playerId 가져오기
     const transferMarket = await prisma.transferMarket.findFirst({
       where: {
@@ -121,8 +129,14 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
       select: {
         playerId: true,
         sellerId: true,
+        price: true,
       },
     });
+
+    // 캐시가 부족하면 에러 발생
+    if (user.cash < transferMarket.price) {
+      return res.status(400).json({ error: '캐시가 부족합니다!' });
+    }
 
     // 선수 정보가 없을 경우
     if (!transferMarket) {
@@ -161,6 +175,30 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
         where: {
           marketId: +marketId,
         },
+        select: {
+          sellerId: true,
+          price: true,
+        },
+      });
+
+      // 판매자 캐시 더하기
+      const increaseCash = await tx.user.update({
+        where: { userId: +transferUpdate.sellerId },
+        data: {
+          cash: {
+            increment: transferUpdate.price,
+          },
+        },
+      });
+
+      // 구매자 캐시 빼기
+      const decreaseCash = await tx.user.update({
+        where: { userId: +userId },
+        data: {
+          cash: {
+            decrement: transferUpdate.price,
+          },
+        },
       });
 
       // userPlayer 조회
@@ -181,7 +219,7 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
             updatedAt: new Date(),
           },
         });
-        return [transferUpdate, newPlayer];
+        return [transferUpdate, newPlayer, decreaseCash, increaseCash];
       } else {
         // userPlayer가 존재하는 경우 count 증가
         const updatedPlayer = await tx.userPlayer.update({
@@ -195,7 +233,7 @@ router.patch('/transfer/purchase', authMiddleware, async (req, res, next) => {
             updatedAt: new Date(),
           },
         });
-        return [transferUpdate, updatedPlayer];
+        return [transferUpdate, updatedPlayer, decreaseCash, increaseCash];
       }
     });
 
@@ -336,65 +374,6 @@ router.get('/transfer/list', authMiddleware, async (req, res, next) => {
     }));
 
     return res.status(200).json(transferMarket);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 퀵셀 API (count 소모)
-router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
-  const { playerId } = req.params;
-  const { userId } = req.user;
-  try {
-    // 유저 정보 가져오기
-    const user = await prisma.user.findFirst({
-      where: { userId: +userId },
-    });
-
-    const userPlayer = await prisma.userPlayer.findFirst({
-      where: {
-        userId: +userId,
-        playerId: +playerId,
-      },
-    });
-
-    // 존재하지 않는 선수일 경우 에러
-    if (!userPlayer) {
-      return res.status(401).json({ error: '존재하지 않는 선수입니다.' });
-    }
-
-    // 판매할 수 있는 카드가 없으면 에러
-    if (userPlayer.count < 1) {
-      return res.status(401).json({ error: '판매할 수 있는 카드가 없습니다.' });
-    }
-
-    // 선수의 count - 1
-    await prisma.userPlayer.update({
-      where: {
-        Id: +userPlayer.Id,
-        userId: +userId,
-        playerId: +playerId,
-      },
-      data: {
-        count: userPlayer.count - 1,
-        updatedAt: new Date(),
-      },
-    });
-
-    // 판매한 선수의 레어도에 따라 유저에게 캐쉬 지급
-    const player = await prisma.player.findFirst({
-      where: { playerId: +playerId },
-    });
-    const rare = player.rare;
-    const pricePerRare = [5000, 4000, 3000, 2000, 1000];
-    const curCash = user.cash + pricePerRare[rare - 1];
-
-    await prisma.user.update({
-      where: { userId: +userId },
-      data: { cash: +curCash },
-    });
-
-    return res.status(200).json({ message: `카드 판매 완료! (cash + ${pricePerRare[rare - 1]})` });
   } catch (err) {
     next(err);
   }
