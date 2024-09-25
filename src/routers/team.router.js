@@ -171,7 +171,7 @@ router.get('/gacha', authMiddleware, async (req, res, next) => {
       return res.status(400).json({ error: '캐시가 부족합니다!' });
     }
 
-    // 캐시 -1000
+    // 캐시 -100
     await prisma.user.update({
       where: { userId: +userId },
       data: { cash: user.cash - 100 },
@@ -350,11 +350,10 @@ router.post('/upgrade/:playerId', authMiddleware, async (req, res, next) => {
   }
 });
 
-// 카드 판매 API (count 소모)
+// 카드판매 API (count 소모)
 router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => {
   const { playerId } = req.params;
   const { userId } = req.user;
-
   try {
     // 유저 정보 가져오기
     const user = await prisma.user.findFirst({
@@ -368,37 +367,57 @@ router.patch('/userPlayer/:playerId', authMiddleware, async (req, res, next) => 
       },
     });
 
+    // playerId에 해당하는 playerName,rare도 가져오기
+    const exitedPlayer = await prisma.player.findFirst({
+      where: { playerId: +playerId },
+      select: { playerName: true, rare: true },
+    });
+
+    // 선수정보가 없는 경우
+    if (!exitedPlayer) {
+      return res.status(404).json({ error: '등록되지 않은 선수입니다.' });
+    }
+
     // 존재하지 않는 선수일 경우 에러
     if (!userPlayer) {
-      return res.status(401).json({ error: '존재하지 않는 선수입니다.' });
+      return res.status(404).json({ error: '존재하지 않는 선수입니다.' });
     }
 
-    // 판매할 수 있는 카드가 없으면 에러
-    if (userPlayer.count < 1) {
-      return res.status(401).json({ error: '판매할 수 있는 카드가 없습니다.' });
+    // 강화된 카드만 한장 남았을 때
+    if (userPlayer.count === 0 && userPlayer.upgrade > 0) {
+      return res.status(400).json({ error: '강화된 카드는 이적시장에 등록할 수 없습니다.' });
     }
 
-    // 선수의 count - 1
-    await prisma.userPlayer.update({
-      where: {
-        Id: +userPlayer.Id,
-        userId: +userId,
-        playerId: +playerId,
-      },
-      data: {
-        count: userPlayer.count - 1,
-        updatedAt: new Date(),
-      },
-    });
+    // user가 가지고 있는 선수 삭제
+    if (userPlayer.count === 0) {
+      // count가 0일 경우, 해당 userPlayer 삭제
+      await prisma.userPlayer.delete({
+        where: {
+          Id: +userPlayer.Id,
+        },
+      });
+    } else {
+      // count가 0보다 클 경우, count 감소
+      await prisma.userPlayer.update({
+        where: {
+          Id: +userPlayer.Id,
+          userId: +userId,
+          playerId: +playerId,
+        },
+        data: {
+          count: userPlayer.count - 1,
+          updatedAt: new Date(),
+        },
+      });
+    }
 
     // 판매한 선수의 레어도에 따라 유저에게 캐쉬 지급
     const player = await prisma.player.findFirst({
       where: { playerId: +playerId },
     });
     const rare = player.rare;
-    const pricePerRare = [1000, 800, 200, 100, 50];
+    const pricePerRare = [5000, 4000, 3000, 2000, 1000];
     const curCash = user.cash + pricePerRare[rare - 1];
-
     await prisma.user.update({
       where: { userId: +userId },
       data: { cash: +curCash },
